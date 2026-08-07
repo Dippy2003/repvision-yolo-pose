@@ -1,0 +1,31 @@
+# Python environments, caches, and build output
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Models and generated application output
+*.pt
+runs/
+outputs/
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.avi
+*.mov
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
