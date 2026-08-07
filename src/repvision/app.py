@@ -3,6 +3,7 @@
 import argparse
 from collections.abc import Sequence
 
+from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 
 
@@ -21,6 +22,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=list(Arm),
         default=defaults.selected_arm,
     )
+    parser.add_argument(
+        "--check-camera",
+        action="store_true",
+        help="open the camera, read one frame, and exit",
+    )
     return parser
 
 
@@ -33,9 +39,24 @@ def config_from_args(args: argparse.Namespace) -> AppConfig:
     )
 
 
+def check_camera(config: AppConfig) -> tuple[int, ...]:
+    """Read one frame and release the camera immediately."""
+    with Camera(config.camera_index) as camera:
+        return camera.read().shape
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate startup settings without starting future processing stages."""
-    config = config_from_args(build_parser().parse_args(argv))
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    config = config_from_args(args)
+    if args.check_camera:
+        try:
+            frame_shape = check_camera(config)
+        except CameraError as error:
+            parser.error(str(error))
+        print(f"Camera check passed (frame shape={frame_shape}).")
+        return 0
     print(
         "RepVision foundation is ready "
         f"(camera={config.camera_index}, arm={config.selected_arm.value}, "
