@@ -29,6 +29,26 @@ def open_opencv_capture(index: int) -> CaptureDevice:
     return cv2.VideoCapture(index)
 
 
+class Camera:
+    """Own a single webcam capture device."""
+
+    def __init__(
+        self,
+        index: int = 0,
+        capture_factory: CaptureFactory = open_opencv_capture,
+    ) -> None:
+        if index < 0:
+            raise ValueError("camera index must be zero or greater")
+        self.index = index
+        self._capture_factory = capture_factory
+        self._capture: CaptureDevice | None = None
+
+    @property
+    def is_open(self) -> bool:
+        """Return whether this wrapper owns a usable capture device."""
+        return self._capture is not None and self._capture.isOpened()
+
+
 class CameraError(RuntimeError):
     """Base class for expected camera failures."""
 
