@@ -80,6 +80,18 @@ class Camera:
             self._capture.release()
             self._capture = None
 
+    def __enter__(self) -> "Camera":
+        self.open()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: object,
+    ) -> None:
+        self.release()
+
 
 class CameraError(RuntimeError):
     """Base class for expected camera failures."""
