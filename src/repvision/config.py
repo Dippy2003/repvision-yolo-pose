@@ -39,3 +39,7 @@ class AppConfig:
             raise ValueError(
                 "angle thresholds must satisfy 0 <= up < down <= 180"
             )
+        if self.confirmation_frames < 1:
+            raise ValueError("confirmation_frames must be positive")
+        if self.smoothing_window < 1:
+            raise ValueError("smoothing_window must be positive")

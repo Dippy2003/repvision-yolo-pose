@@ -59,3 +59,15 @@ def test_angle_thresholds_must_define_an_ordered_range(
         ValueError, match="angle thresholds must satisfy 0 <= up < down <= 180"
     ):
         AppConfig(up_angle_threshold=up, down_angle_threshold=down)
+
+
+@pytest.mark.parametrize(
+    ("keyword", "message"),
+    [
+        ("confirmation_frames", "confirmation_frames must be positive"),
+        ("smoothing_window", "smoothing_window must be positive"),
+    ],
+)
+def test_frame_windows_must_be_positive(keyword: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        AppConfig(**{keyword: 0})  # type: ignore[arg-type]
