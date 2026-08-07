@@ -13,3 +13,5 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.camera_index == 0
     assert config.selected_arm is Arm.RIGHT
     assert config.confidence_threshold == 0.5
+    assert config.up_angle_threshold == 50.0
+    assert config.down_angle_threshold == 155.0

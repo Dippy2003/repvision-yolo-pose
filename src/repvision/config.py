@@ -19,3 +19,5 @@ class AppConfig:
     camera_index: int = 0
     selected_arm: Arm = Arm.RIGHT
     confidence_threshold: float = 0.5
+    up_angle_threshold: float = 50.0
+    down_angle_threshold: float = 155.0
