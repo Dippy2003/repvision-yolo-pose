@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from repvision.camera import Camera, CameraOpenError
+from repvision.camera import Camera, CameraNotOpenError, CameraOpenError, FrameReadError
 
 
 @dataclass
@@ -62,3 +62,29 @@ def test_open_failure_releases_unusable_capture() -> None:
 
     assert device.released
     assert not camera.is_open
+
+
+def test_read_returns_frame_from_open_capture() -> None:
+    expected = np.full((3, 4, 3), 17, dtype=np.uint8)
+    device = FakeCapture(read_result=(True, expected))
+    camera = Camera(capture_factory=factory_for(device))
+    camera.open()
+
+    assert camera.read() is expected
+
+
+def test_read_requires_an_open_camera() -> None:
+    with pytest.raises(CameraNotOpenError, match="opened before reading"):
+        Camera().read()
+
+
+@pytest.mark.parametrize("read_result", [(False, None), (True, None)])
+def test_read_rejects_missing_frames(
+    read_result: tuple[bool, NDArray[np.uint8] | None],
+) -> None:
+    device = FakeCapture(read_result=read_result)
+    camera = Camera(index=3, capture_factory=factory_for(device))
+    camera.open()
+
+    with pytest.raises(FrameReadError, match="camera index 3"):
+        camera.read()
