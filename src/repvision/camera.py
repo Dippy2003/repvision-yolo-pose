@@ -74,6 +74,12 @@ class Camera:
             )
         return frame
 
+    def release(self) -> None:
+        """Release the owned capture device; repeated calls are safe."""
+        if self._capture is not None:
+            self._capture.release()
+            self._capture = None
+
 
 class CameraError(RuntimeError):
     """Base class for expected camera failures."""
