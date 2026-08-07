@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 
 class Arm(str, Enum):
@@ -24,3 +25,5 @@ class AppConfig:
     confirmation_frames: int = 3
     smoothing_window: int = 5
     cooldown_seconds: float = 0.3
+    input_size: int = 640
+    output_directory: Path = Path("outputs")
