@@ -62,6 +62,18 @@ class Camera:
             )
         self._capture = capture
 
+    def read(self) -> Frame:
+        """Read one frame from the open camera."""
+        if self._capture is None or not self._capture.isOpened():
+            raise CameraNotOpenError("Camera must be opened before reading frames.")
+
+        success, frame = self._capture.read()
+        if not success or frame is None:
+            raise FrameReadError(
+                f"Could not read a frame from camera index {self.index}."
+            )
+        return frame
+
 
 class CameraError(RuntimeError):
     """Base class for expected camera failures."""
