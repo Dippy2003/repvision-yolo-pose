@@ -27,3 +27,9 @@ class AppConfig:
     cooldown_seconds: float = 0.3
     input_size: int = 640
     output_directory: Path = Path("outputs")
+
+    def __post_init__(self) -> None:
+        if not self.model_name.strip():
+            raise ValueError("model_name must not be empty")
+        if self.camera_index < 0:
+            raise ValueError("camera_index must be zero or greater")

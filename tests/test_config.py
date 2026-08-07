@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from repvision.config import AppConfig, Arm
 
 
@@ -22,3 +24,17 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.cooldown_seconds == 0.3
     assert config.input_size == 640
     assert config.output_directory == Path("outputs")
+
+
+@pytest.mark.parametrize(
+    ("keyword", "value", "message"),
+    [
+        ("model_name", "  ", "model_name must not be empty"),
+        ("camera_index", -1, "camera_index must be zero or greater"),
+    ],
+)
+def test_invalid_capture_source_settings_are_rejected(
+    keyword: str, value: object, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        AppConfig(**{keyword: value})  # type: ignore[arg-type]
