@@ -21,3 +21,6 @@ class AppConfig:
     confidence_threshold: float = 0.5
     up_angle_threshold: float = 50.0
     down_angle_threshold: float = 155.0
+    confirmation_frames: int = 3
+    smoothing_window: int = 5
+    cooldown_seconds: float = 0.3

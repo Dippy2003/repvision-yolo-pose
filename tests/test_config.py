@@ -15,3 +15,6 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.confidence_threshold == 0.5
     assert config.up_angle_threshold == 50.0
     assert config.down_angle_threshold == 155.0
+    assert config.confirmation_frames == 3
+    assert config.smoothing_window == 5
+    assert config.cooldown_seconds == 0.3
