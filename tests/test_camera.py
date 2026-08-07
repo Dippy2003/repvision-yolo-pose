@@ -88,3 +88,27 @@ def test_read_rejects_missing_frames(
 
     with pytest.raises(FrameReadError, match="camera index 3"):
         camera.read()
+
+
+def test_release_is_safe_to_call_more_than_once() -> None:
+    device = FakeCapture()
+    camera = Camera(capture_factory=factory_for(device))
+    camera.open()
+
+    camera.release()
+    camera.release()
+
+    assert device.released
+    assert not camera.is_open
+
+
+def test_context_manager_releases_capture_after_an_error() -> None:
+    device = FakeCapture()
+    camera = Camera(capture_factory=factory_for(device))
+
+    with pytest.raises(RuntimeError, match="processing failed"):
+        with camera:
+            raise RuntimeError("processing failed")
+
+    assert device.released
+    assert not camera.is_open
