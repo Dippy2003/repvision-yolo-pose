@@ -48,6 +48,20 @@ class Camera:
         """Return whether this wrapper owns a usable capture device."""
         return self._capture is not None and self._capture.isOpened()
 
+    def open(self) -> None:
+        """Open the configured camera or raise an understandable error."""
+        if self.is_open:
+            return
+
+        capture = self._capture_factory(self.index)
+        if not capture.isOpened():
+            capture.release()
+            raise CameraOpenError(
+                f"Could not open camera index {self.index}. "
+                "Check that it is connected and not in use by another application."
+            )
+        self._capture = capture
+
 
 class CameraError(RuntimeError):
     """Base class for expected camera failures."""
