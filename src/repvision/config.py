@@ -35,3 +35,7 @@ class AppConfig:
             raise ValueError("camera_index must be zero or greater")
         if not 0.0 <= self.confidence_threshold <= 1.0:
             raise ValueError("confidence_threshold must be between 0 and 1")
+        if not 0.0 <= self.up_angle_threshold < self.down_angle_threshold <= 180.0:
+            raise ValueError(
+                "angle thresholds must satisfy 0 <= up < down <= 180"
+            )

@@ -46,3 +46,16 @@ def test_confidence_threshold_must_be_a_probability(threshold: float) -> None:
         ValueError, match="confidence_threshold must be between 0 and 1"
     ):
         AppConfig(confidence_threshold=threshold)
+
+
+@pytest.mark.parametrize(
+    ("up", "down"),
+    [(-1.0, 155.0), (50.0, 181.0), (155.0, 50.0), (50.0, 50.0)],
+)
+def test_angle_thresholds_must_define_an_ordered_range(
+    up: float, down: float
+) -> None:
+    with pytest.raises(
+        ValueError, match="angle thresholds must satisfy 0 <= up < down <= 180"
+    ):
+        AppConfig(up_angle_threshold=up, down_angle_threshold=down)
