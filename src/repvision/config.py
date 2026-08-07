@@ -1,11 +1,11 @@
 """Typed runtime configuration for RepVision."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 
-class Arm(str, Enum):
+class Arm(StrEnum):
     """Arm selected for pose tracking."""
 
     LEFT = "left"

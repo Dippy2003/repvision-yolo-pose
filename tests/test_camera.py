@@ -16,7 +16,7 @@ class FakeCapture:
     )
     released: bool = False
 
-    def isOpened(self) -> bool:  # noqa: N802
+    def isOpened(self) -> bool:
         return self.opened and not self.released
 
     def read(self) -> tuple[bool, NDArray[np.uint8] | None]:
@@ -106,9 +106,8 @@ def test_context_manager_releases_capture_after_an_error() -> None:
     device = FakeCapture()
     camera = Camera(capture_factory=factory_for(device))
 
-    with pytest.raises(RuntimeError, match="processing failed"):
-        with camera:
-            raise RuntimeError("processing failed")
+    with pytest.raises(RuntimeError, match="processing failed"), camera:
+        raise RuntimeError("processing failed")
 
     assert device.released
     assert not camera.is_open

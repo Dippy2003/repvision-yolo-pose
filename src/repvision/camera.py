@@ -12,7 +12,7 @@ Frame = NDArray[np.uint8]
 class CaptureDevice(Protocol):
     """Small interface implemented by OpenCV and test capture devices."""
 
-    def isOpened(self) -> bool: ...  # noqa: N802
+    def isOpened(self) -> bool: ...
 
     def read(self) -> tuple[bool, Frame | None]: ...
 
