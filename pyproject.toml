@@ -20,6 +20,9 @@ dev = [
     "ruff>=0.9",
 ]
 
+[project.scripts]
+repvision = "repvision.app:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
