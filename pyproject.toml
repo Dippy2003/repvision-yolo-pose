@@ -14,5 +14,11 @@ dependencies = [
     "ultralytics>=8.3",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
