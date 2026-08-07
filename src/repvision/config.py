@@ -43,3 +43,7 @@ class AppConfig:
             raise ValueError("confirmation_frames must be positive")
         if self.smoothing_window < 1:
             raise ValueError("smoothing_window must be positive")
+        if self.cooldown_seconds < 0.0:
+            raise ValueError("cooldown_seconds must not be negative")
+        if self.input_size < 1:
+            raise ValueError("input_size must be positive")

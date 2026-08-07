@@ -71,3 +71,17 @@ def test_angle_thresholds_must_define_an_ordered_range(
 def test_frame_windows_must_be_positive(keyword: str, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         AppConfig(**{keyword: 0})  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("keyword", "value", "message"),
+    [
+        ("cooldown_seconds", -0.1, "cooldown_seconds must not be negative"),
+        ("input_size", 0, "input_size must be positive"),
+    ],
+)
+def test_performance_settings_reject_invalid_values(
+    keyword: str, value: int | float, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        AppConfig(**{keyword: value})  # type: ignore[arg-type]
