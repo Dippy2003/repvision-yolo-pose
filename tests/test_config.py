@@ -38,3 +38,11 @@ def test_invalid_capture_source_settings_are_rejected(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         AppConfig(**{keyword: value})  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("threshold", [-0.01, 1.01])
+def test_confidence_threshold_must_be_a_probability(threshold: float) -> None:
+    with pytest.raises(
+        ValueError, match="confidence_threshold must be between 0 and 1"
+    ):
+        AppConfig(confidence_threshold=threshold)

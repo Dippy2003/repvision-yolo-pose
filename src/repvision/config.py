@@ -33,3 +33,5 @@ class AppConfig:
             raise ValueError("model_name must not be empty")
         if self.camera_index < 0:
             raise ValueError("camera_index must be zero or greater")
+        if not 0.0 <= self.confidence_threshold <= 1.0:
+            raise ValueError("confidence_threshold must be between 0 and 1")
