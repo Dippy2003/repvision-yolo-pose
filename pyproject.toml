@@ -8,6 +8,11 @@ version = "0.1.0"
 description = "Real-time bicep-curl counting with YOLO Pose and OpenCV"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "opencv-python>=4.9",
+    "ultralytics>=8.3",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
