@@ -97,7 +97,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
     print(
-        "RepVision foundation is ready "
+        "RepVision pose pipeline is configured "
         f"(camera={config.camera_index}, arm={config.selected_arm.value}, "
         f"model={config.model_name})."
     )
