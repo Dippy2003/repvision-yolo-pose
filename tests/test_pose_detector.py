@@ -41,6 +41,13 @@ class RecordingModel:
         return self.results
 
 
+class FailingModel:
+    def predict(
+        self, *, source: NDArray[np.uint8], imgsz: int, verbose: bool
+    ) -> list[object]:
+        raise RuntimeError("backend unavailable")
+
+
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
     assert KeypointIndex.LEFT_SHOULDER == 5
     assert KeypointIndex.RIGHT_SHOULDER == 6
@@ -110,6 +117,13 @@ def test_model_inference_receives_frame_and_configured_size() -> None:
     assert called_frame is frame
     assert input_size == 320
     assert verbose is False
+
+
+def test_model_inference_wraps_expected_backend_failures() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+
+    with pytest.raises(PoseInferenceError, match="backend unavailable"):
+        _run_model(FailingModel(), frame, 640)
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
