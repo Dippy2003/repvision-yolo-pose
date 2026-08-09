@@ -124,6 +124,28 @@ def _landmark_from_row(row: NDArray[np.float64]) -> Landmark:
     return Landmark(point, confidence)
 
 
+def parse_pose_result(result: object) -> tuple[PersonPose, ...]:
+    """Convert one Ultralytics result into application-owned person poses."""
+    components = _result_components(result)
+    if components is None:
+        return ()
+
+    raw_boxes, raw_confidences, raw_keypoints = components
+    boxes = _as_float_array(raw_boxes)
+    confidences = _as_float_array(raw_confidences)
+    keypoints = _as_float_array(raw_keypoints)
+    _validate_pose_shapes(boxes, confidences, keypoints)
+
+    people: list[PersonPose] = []
+    for box_row, confidence, landmark_rows in zip(
+        boxes, confidences, keypoints, strict=True
+    ):
+        box = BoundingBox(*(float(value) for value in box_row[:4]))
+        landmarks = tuple(_landmark_from_row(row) for row in landmark_rows)
+        people.append(PersonPose(box, landmarks, float(confidence)))
+    return tuple(people)
+
+
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
 

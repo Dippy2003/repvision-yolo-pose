@@ -30,6 +30,7 @@ from repvision.pose_detector import (
     _validate_pose_shapes,
     arm_keypoint_indices,
     load_ultralytics_model,
+    parse_pose_result,
     select_primary_person,
 )
 
@@ -64,6 +65,17 @@ class TensorLike:
 
     def numpy(self) -> NDArray[np.float64]:
         return np.asarray(self.values, dtype=np.float64)
+
+
+def synthetic_result(
+    boxes: NDArray[np.float64],
+    confidences: NDArray[np.float64],
+    keypoints: NDArray[np.float64],
+) -> object:
+    return SimpleNamespace(
+        boxes=SimpleNamespace(xyxy=boxes, conf=confidences),
+        keypoints=SimpleNamespace(data=keypoints),
+    )
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -226,6 +238,32 @@ def test_missing_or_nonfinite_keypoints_have_no_position(
     row: NDArray[np.float64],
 ) -> None:
     assert _landmark_from_row(row).point is None
+
+
+def test_pose_result_converts_boxes_confidence_and_keypoints() -> None:
+    landmark_data = np.asarray(
+        [[[float(i), float(i + 10), 0.8] for i in range(17)]], dtype=np.float64
+    )
+    result = synthetic_result(
+        np.asarray([[10.0, 20.0, 110.0, 220.0]]),
+        np.asarray([0.91]),
+        landmark_data,
+    )
+
+    people = parse_pose_result(result)
+
+    assert len(people) == 1
+    assert people[0].box == BoundingBox(10.0, 20.0, 110.0, 220.0)
+    assert people[0].detection_confidence == 0.91
+    assert people[0].landmarks[8] == Landmark(Point2D(8.0, 18.0), 0.8)
+
+
+def test_empty_pose_result_returns_no_people() -> None:
+    result = synthetic_result(
+        np.zeros((0, 4)), np.zeros((0,)), np.zeros((0, 17, 3))
+    )
+
+    assert parse_pose_result(result) == ()
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
