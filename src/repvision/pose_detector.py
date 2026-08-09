@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
+from math import isfinite
 
 
 class KeypointIndex(IntEnum):
@@ -35,3 +36,21 @@ class Landmark:
     def is_reliable(self, threshold: float) -> bool:
         """Return whether this landmark is present and meets a threshold."""
         return self.point is not None and self.confidence >= threshold
+
+
+@dataclass(frozen=True, slots=True)
+class BoundingBox:
+    """Person bounding box in pixel coordinates."""
+
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+    @property
+    def area(self) -> float:
+        """Return zero for degenerate or non-finite boxes."""
+        coordinates = (self.x1, self.y1, self.x2, self.y2)
+        if not all(isfinite(value) for value in coordinates):
+            return 0.0
+        return max(0.0, self.x2 - self.x1) * max(0.0, self.y2 - self.y1)

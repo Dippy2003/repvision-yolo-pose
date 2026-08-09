@@ -2,7 +2,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from repvision.pose_detector import KeypointIndex, Landmark, Point2D
+from repvision.pose_detector import BoundingBox, KeypointIndex, Landmark, Point2D
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -30,3 +30,18 @@ def test_landmark_reliability_requires_position_and_confidence() -> None:
     assert Landmark(point, 0.5).is_reliable(0.5)
     assert not Landmark(point, 0.49).is_reliable(0.5)
     assert not Landmark(None, 0.99).is_reliable(0.5)
+
+
+@pytest.mark.parametrize(
+    ("box", "area"),
+    [
+        (BoundingBox(10.0, 20.0, 30.0, 50.0), 600.0),
+        (BoundingBox(30.0, 20.0, 10.0, 50.0), 0.0),
+        (BoundingBox(10.0, 50.0, 30.0, 20.0), 0.0),
+        (BoundingBox(0.0, 0.0, float("nan"), 10.0), 0.0),
+    ],
+)
+def test_bounding_box_area_rejects_invalid_geometry(
+    box: BoundingBox, area: float
+) -> None:
+    assert box.area == area
