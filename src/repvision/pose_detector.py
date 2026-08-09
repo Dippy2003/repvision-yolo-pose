@@ -60,6 +60,24 @@ class Landmark:
 
 
 @dataclass(frozen=True, slots=True)
+class ArmLandmarks:
+    """Shoulder, elbow, wrist, and hip landmarks for the selected arm."""
+
+    arm: Arm
+    shoulder: Landmark
+    elbow: Landmark
+    wrist: Landmark
+    hip: Landmark
+
+    def movement_points_reliable(self, threshold: float) -> bool:
+        """Check only the three joints required for elbow movement."""
+        return all(
+            landmark.is_reliable(threshold)
+            for landmark in (self.shoulder, self.elbow, self.wrist)
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class BoundingBox:
     """Person bounding box in pixel coordinates."""
 

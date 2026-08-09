@@ -4,6 +4,7 @@ import pytest
 
 from repvision.config import Arm
 from repvision.pose_detector import (
+    ArmLandmarks,
     BoundingBox,
     KeypointIndex,
     Landmark,
@@ -76,3 +77,19 @@ def test_arm_selection_maps_to_matching_coco_side() -> None:
         KeypointIndex.RIGHT_WRIST,
         KeypointIndex.RIGHT_HIP,
     )
+
+
+def test_arm_reliability_requires_shoulder_elbow_and_wrist() -> None:
+    visible = Landmark(Point2D(1.0, 2.0), 0.8)
+    low_confidence = Landmark(Point2D(2.0, 3.0), 0.2)
+    landmarks = ArmLandmarks(Arm.RIGHT, visible, visible, low_confidence, visible)
+
+    assert not landmarks.movement_points_reliable(0.5)
+
+
+def test_low_confidence_hip_does_not_hide_reliable_movement_points() -> None:
+    visible = Landmark(Point2D(1.0, 2.0), 0.8)
+    missing_hip = Landmark(None, 0.0)
+    landmarks = ArmLandmarks(Arm.LEFT, visible, visible, visible, missing_hip)
+
+    assert landmarks.movement_points_reliable(0.5)
