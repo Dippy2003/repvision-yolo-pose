@@ -7,6 +7,22 @@ from math import isfinite
 from repvision.config import Arm
 
 
+class PoseDetectorError(RuntimeError):
+    """Base class for expected pose detector failures."""
+
+
+class PoseModelLoadError(PoseDetectorError):
+    """Raised when the configured pose model cannot be loaded."""
+
+
+class PoseInferenceError(PoseDetectorError):
+    """Raised when pose inference fails for a frame."""
+
+
+class PoseResultError(PoseDetectorError):
+    """Raised when model output does not match the expected pose schema."""
+
+
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
 

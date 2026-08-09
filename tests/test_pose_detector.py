@@ -11,6 +11,10 @@ from repvision.pose_detector import (
     PersonPose,
     Point2D,
     PoseObservation,
+    PoseDetectorError,
+    PoseInferenceError,
+    PoseModelLoadError,
+    PoseResultError,
     PoseStatus,
     arm_keypoint_indices,
     select_primary_person,
@@ -33,6 +37,15 @@ def test_pose_status_values_are_stable_for_consumers() -> None:
     assert PoseStatus.NO_PERSON.value == "no_person"
     assert PoseStatus.MISSING_KEYPOINTS.value == "missing_keypoints"
     assert PoseStatus.LOW_CONFIDENCE.value == "low_confidence"
+
+
+@pytest.mark.parametrize(
+    "error_type", [PoseModelLoadError, PoseInferenceError, PoseResultError]
+)
+def test_pose_failures_share_a_public_base_error(
+    error_type: type[PoseDetectorError],
+) -> None:
+    assert isinstance(error_type("failure"), PoseDetectorError)
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
