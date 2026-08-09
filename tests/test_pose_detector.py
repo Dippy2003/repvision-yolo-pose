@@ -13,6 +13,7 @@ from repvision.pose_detector import (
     PoseObservation,
     PoseStatus,
     arm_keypoint_indices,
+    select_primary_person,
 )
 
 
@@ -40,6 +41,17 @@ def test_empty_observation_represents_a_frame_without_people() -> None:
     assert observation.persons == ()
     assert observation.primary_person is None
     assert observation.selected_arm is None
+
+
+def test_primary_person_is_largest_valid_detection() -> None:
+    landmarks = tuple(Landmark(Point2D(1.0, 1.0), 0.9) for _ in range(17))
+    invalid = PersonPose(BoundingBox(5.0, 5.0, 2.0, 8.0), landmarks, 0.99)
+    small = PersonPose(BoundingBox(0.0, 0.0, 10.0, 10.0), landmarks, 0.9)
+    large = PersonPose(BoundingBox(0.0, 0.0, 20.0, 15.0), landmarks, 0.6)
+
+    assert select_primary_person((invalid, small, large)) is large
+    assert select_primary_person((invalid,)) is None
+    assert select_primary_person(()) is None
 
 
 def test_point_coordinates_are_immutable() -> None:
