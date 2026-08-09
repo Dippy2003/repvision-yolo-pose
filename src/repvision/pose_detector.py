@@ -55,6 +55,10 @@ def load_ultralytics_model(model_name: str) -> PoseModel:
         ) from error
 
 
+def _run_model(model: PoseModel, frame: Frame, input_size: int) -> Sequence[object]:
+    return model.predict(source=frame, imgsz=input_size, verbose=False)
+
+
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
 

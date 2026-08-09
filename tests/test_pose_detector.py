@@ -2,7 +2,9 @@ from dataclasses import FrozenInstanceError
 from typing import cast
 from unittest.mock import patch
 
+import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from repvision.config import AppConfig, Arm
 from repvision.pose_detector import (
@@ -20,10 +22,23 @@ from repvision.pose_detector import (
     PoseModelLoadError,
     PoseResultError,
     PoseStatus,
+    _run_model,
     arm_keypoint_indices,
     load_ultralytics_model,
     select_primary_person,
 )
+
+
+class RecordingModel:
+    def __init__(self, results: list[object] | None = None) -> None:
+        self.results = results or []
+        self.calls: list[tuple[NDArray[np.uint8], int, bool]] = []
+
+    def predict(
+        self, *, source: NDArray[np.uint8], imgsz: int, verbose: bool
+    ) -> list[object]:
+        self.calls.append((source, imgsz, verbose))
+        return self.results
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -81,6 +96,20 @@ def test_detector_loads_configured_model_once() -> None:
 
     assert detector.config.model_name == "chosen-pose.pt"
     assert loaded_names == ["chosen-pose.pt"]
+
+
+def test_model_inference_receives_frame_and_configured_size() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    model = RecordingModel([object()])
+
+    results = _run_model(model, frame, 320)
+
+    assert results is model.results
+    assert len(model.calls) == 1
+    called_frame, input_size, verbose = model.calls[0]
+    assert called_frame is frame
+    assert input_size == 320
+    assert verbose is False
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
