@@ -150,6 +150,11 @@ def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
     np.testing.assert_array_equal(converted, tensor.values)
 
 
+def test_non_numeric_model_output_is_rejected() -> None:
+    with pytest.raises(PoseResultError, match="non-numeric"):
+        _as_float_array([["not-a-number"]])
+
+
 def test_empty_observation_represents_a_frame_without_people() -> None:
     observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
 

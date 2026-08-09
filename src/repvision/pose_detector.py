@@ -72,7 +72,10 @@ def _as_float_array(value: object) -> NDArray[np.float64]:
     numpy_method = getattr(value, "numpy", None)
     if callable(numpy_method):
         value = numpy_method()
-    return np.asarray(value, dtype=np.float64)
+    try:
+        return np.asarray(value, dtype=np.float64)
+    except (TypeError, ValueError) as error:
+        raise PoseResultError("Pose result contains non-numeric values.") from error
 
 
 class KeypointIndex(IntEnum):
