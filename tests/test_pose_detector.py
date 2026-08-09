@@ -15,12 +15,12 @@ from repvision.pose_detector import (
     Landmark,
     PersonPose,
     Point2D,
-    PoseObservation,
-    PoseDetectorError,
     PoseDetector,
+    PoseDetectorError,
     PoseInferenceError,
     PoseModel,
     PoseModelLoadError,
+    PoseObservation,
     PoseResultError,
     PoseStatus,
     _as_float_array,
@@ -117,7 +117,9 @@ def test_ultralytics_loader_forwards_configured_model_name() -> None:
 def test_ultralytics_loader_explains_model_failure() -> None:
     with (
         patch("ultralytics.YOLO", side_effect=RuntimeError("invalid checkpoint")),
-        pytest.raises(PoseModelLoadError, match="broken-pose.pt.*invalid checkpoint"),
+        pytest.raises(
+            PoseModelLoadError, match=r"broken-pose\.pt.*invalid checkpoint"
+        ),
     ):
         load_ultralytics_model("broken-pose.pt")
 
