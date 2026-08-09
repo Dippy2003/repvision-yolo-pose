@@ -6,6 +6,9 @@ from enum import IntEnum, StrEnum
 from math import isfinite
 from typing import Protocol
 
+import numpy as np
+from numpy.typing import NDArray
+
 from repvision.camera import Frame
 from repvision.config import AppConfig, Arm
 
@@ -60,6 +63,16 @@ def _run_model(model: PoseModel, frame: Frame, input_size: int) -> Sequence[obje
         return model.predict(source=frame, imgsz=input_size, verbose=False)
     except (OSError, RuntimeError, ValueError) as error:
         raise PoseInferenceError(f"Pose inference failed: {error}") from error
+
+
+def _as_float_array(value: object) -> NDArray[np.float64]:
+    cpu_method = getattr(value, "cpu", None)
+    if callable(cpu_method):
+        value = cpu_method()
+    numpy_method = getattr(value, "numpy", None)
+    if callable(numpy_method):
+        value = numpy_method()
+    return np.asarray(value, dtype=np.float64)
 
 
 class KeypointIndex(IntEnum):

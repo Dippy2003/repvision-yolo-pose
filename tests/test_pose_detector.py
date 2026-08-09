@@ -22,6 +22,7 @@ from repvision.pose_detector import (
     PoseModelLoadError,
     PoseResultError,
     PoseStatus,
+    _as_float_array,
     _run_model,
     arm_keypoint_indices,
     load_ultralytics_model,
@@ -46,6 +47,19 @@ class FailingModel:
         self, *, source: NDArray[np.uint8], imgsz: int, verbose: bool
     ) -> list[object]:
         raise RuntimeError("backend unavailable")
+
+
+class TensorLike:
+    def __init__(self, values: list[list[float]]) -> None:
+        self.values = values
+        self.cpu_calls = 0
+
+    def cpu(self) -> "TensorLike":
+        self.cpu_calls += 1
+        return self
+
+    def numpy(self) -> NDArray[np.float64]:
+        return np.asarray(self.values, dtype=np.float64)
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -124,6 +138,16 @@ def test_model_inference_wraps_expected_backend_failures() -> None:
 
     with pytest.raises(PoseInferenceError, match="backend unavailable"):
         _run_model(FailingModel(), frame, 640)
+
+
+def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
+    tensor = TensorLike([[1.0, 2.0], [3.0, 4.0]])
+
+    converted = _as_float_array(tensor)
+
+    assert tensor.cpu_calls == 1
+    assert converted.dtype == np.float64
+    np.testing.assert_array_equal(converted, tensor.values)
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
