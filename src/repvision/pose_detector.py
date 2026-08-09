@@ -142,6 +142,6 @@ class PoseObservation:
 
 
 def select_primary_person(persons: tuple[PersonPose, ...]) -> PersonPose | None:
-    """Select the largest person with a valid bounding box."""
+    """Select the largest valid person, preserving model order for area ties."""
     valid_people = (person for person in persons if person.box.area > 0.0)
     return max(valid_people, key=lambda person: person.box.area, default=None)

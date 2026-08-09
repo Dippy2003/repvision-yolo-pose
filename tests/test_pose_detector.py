@@ -54,6 +54,14 @@ def test_primary_person_is_largest_valid_detection() -> None:
     assert select_primary_person(()) is None
 
 
+def test_primary_person_selection_is_stable_for_equal_areas() -> None:
+    landmarks = tuple(Landmark(Point2D(1.0, 1.0), 0.9) for _ in range(17))
+    first = PersonPose(BoundingBox(0.0, 0.0, 10.0, 20.0), landmarks, 0.6)
+    second = PersonPose(BoundingBox(5.0, 5.0, 25.0, 15.0), landmarks, 0.9)
+
+    assert select_primary_person((first, second)) is first
+
+
 def test_point_coordinates_are_immutable() -> None:
     point = Point2D(x=12.5, y=24.0)
 
