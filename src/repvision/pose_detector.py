@@ -129,3 +129,13 @@ class PersonPose:
         assert wrist is not None
         assert hip is not None
         return ArmLandmarks(arm, shoulder, elbow, wrist, hip)
+
+
+@dataclass(frozen=True, slots=True)
+class PoseObservation:
+    """Structured pose information produced for one video frame."""
+
+    persons: tuple[PersonPose, ...]
+    primary_person: PersonPose | None
+    selected_arm: ArmLandmarks | None
+    status: PoseStatus

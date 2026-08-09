@@ -10,6 +10,7 @@ from repvision.pose_detector import (
     Landmark,
     PersonPose,
     Point2D,
+    PoseObservation,
     PoseStatus,
     arm_keypoint_indices,
 )
@@ -31,6 +32,14 @@ def test_pose_status_values_are_stable_for_consumers() -> None:
     assert PoseStatus.NO_PERSON.value == "no_person"
     assert PoseStatus.MISSING_KEYPOINTS.value == "missing_keypoints"
     assert PoseStatus.LOW_CONFIDENCE.value == "low_confidence"
+
+
+def test_empty_observation_represents_a_frame_without_people() -> None:
+    observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
+
+    assert observation.persons == ()
+    assert observation.primary_person is None
+    assert observation.selected_arm is None
 
 
 def test_point_coordinates_are_immutable() -> None:
