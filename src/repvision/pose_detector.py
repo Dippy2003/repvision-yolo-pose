@@ -92,6 +92,21 @@ def _result_components(result: object) -> tuple[object, object, object] | None:
     return coordinates, confidences, landmark_data
 
 
+def _validate_pose_shapes(
+    boxes: NDArray[np.float64],
+    confidences: NDArray[np.float64],
+    keypoints: NDArray[np.float64],
+) -> None:
+    if boxes.ndim != 2 or boxes.shape[1] < 4:
+        raise PoseResultError("Pose boxes must have shape (people, 4 or more).")
+    if confidences.ndim != 1:
+        raise PoseResultError("Box confidence values must be one-dimensional.")
+    if keypoints.ndim != 3 or keypoints.shape[2] < 3:
+        raise PoseResultError(
+            "Pose keypoints must have shape (people, keypoints, 3 or more)."
+        )
+
+
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
 

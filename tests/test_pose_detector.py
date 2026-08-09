@@ -26,6 +26,7 @@ from repvision.pose_detector import (
     _as_float_array,
     _result_components,
     _run_model,
+    _validate_pose_shapes,
     arm_keypoint_indices,
     load_ultralytics_model,
     select_primary_person,
@@ -167,6 +168,25 @@ def test_non_numeric_model_output_is_rejected() -> None:
 )
 def test_result_components_handle_frames_without_pose_data(result: object) -> None:
     assert _result_components(result) is None
+
+
+@pytest.mark.parametrize(
+    ("boxes", "confidences", "keypoints", "message"),
+    [
+        (np.zeros((4,)), np.zeros((1,)), np.zeros((1, 17, 3)), "Pose boxes"),
+        (np.zeros((1, 4)), np.zeros((1, 1)), np.zeros((1, 17, 3)), "confidence"),
+        (np.zeros((1, 4)), np.zeros((1,)), np.zeros((17, 3)), "Pose keypoints"),
+        (np.zeros((1, 4)), np.zeros((1,)), np.zeros((1, 17, 2)), "Pose keypoints"),
+    ],
+)
+def test_pose_array_shapes_are_validated(
+    boxes: NDArray[np.float64],
+    confidences: NDArray[np.float64],
+    keypoints: NDArray[np.float64],
+    message: str,
+) -> None:
+    with pytest.raises(PoseResultError, match=message):
+        _validate_pose_shapes(boxes, confidences, keypoints)
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
