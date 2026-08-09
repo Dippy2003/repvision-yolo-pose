@@ -1,4 +1,5 @@
 from dataclasses import FrozenInstanceError
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +18,7 @@ from repvision.pose_detector import (
     PoseResultError,
     PoseStatus,
     arm_keypoint_indices,
+    load_ultralytics_model,
     select_primary_person,
 )
 
@@ -46,6 +48,15 @@ def test_pose_failures_share_a_public_base_error(
     error_type: type[PoseDetectorError],
 ) -> None:
     assert isinstance(error_type("failure"), PoseDetectorError)
+
+
+def test_ultralytics_loader_forwards_configured_model_name() -> None:
+    sentinel_model = object()
+    with patch("ultralytics.YOLO", return_value=sentinel_model) as yolo:
+        loaded = load_ultralytics_model("chosen-pose.pt")
+
+    assert loaded is sentinel_model
+    yolo.assert_called_once_with("chosen-pose.pt")
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
