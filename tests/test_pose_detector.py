@@ -2,12 +2,14 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
+from repvision.config import Arm
 from repvision.pose_detector import (
     BoundingBox,
     KeypointIndex,
     Landmark,
     PersonPose,
     Point2D,
+    arm_keypoint_indices,
 )
 
 
@@ -59,3 +61,18 @@ def test_person_pose_handles_missing_keypoint_indices() -> None:
 
     assert person.landmark(KeypointIndex.LEFT_ELBOW) == landmarks[7]
     assert person.landmark(KeypointIndex.LEFT_WRIST) is None
+
+
+def test_arm_selection_maps_to_matching_coco_side() -> None:
+    assert arm_keypoint_indices(Arm.LEFT) == (
+        KeypointIndex.LEFT_SHOULDER,
+        KeypointIndex.LEFT_ELBOW,
+        KeypointIndex.LEFT_WRIST,
+        KeypointIndex.LEFT_HIP,
+    )
+    assert arm_keypoint_indices(Arm.RIGHT) == (
+        KeypointIndex.RIGHT_SHOULDER,
+        KeypointIndex.RIGHT_ELBOW,
+        KeypointIndex.RIGHT_WRIST,
+        KeypointIndex.RIGHT_HIP,
+    )

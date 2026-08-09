@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from math import isfinite
 
+from repvision.config import Arm
+
 
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
@@ -16,6 +18,25 @@ class KeypointIndex(IntEnum):
     RIGHT_WRIST = 10
     LEFT_HIP = 11
     RIGHT_HIP = 12
+
+
+def arm_keypoint_indices(
+    arm: Arm,
+) -> tuple[KeypointIndex, KeypointIndex, KeypointIndex, KeypointIndex]:
+    """Return shoulder, elbow, wrist, and hip indices for one arm."""
+    if arm is Arm.LEFT:
+        return (
+            KeypointIndex.LEFT_SHOULDER,
+            KeypointIndex.LEFT_ELBOW,
+            KeypointIndex.LEFT_WRIST,
+            KeypointIndex.LEFT_HIP,
+        )
+    return (
+        KeypointIndex.RIGHT_SHOULDER,
+        KeypointIndex.RIGHT_ELBOW,
+        KeypointIndex.RIGHT_WRIST,
+        KeypointIndex.RIGHT_HIP,
+    )
 
 
 @dataclass(frozen=True, slots=True)
