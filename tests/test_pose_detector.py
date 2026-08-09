@@ -1,9 +1,10 @@
 from dataclasses import FrozenInstanceError
+from typing import cast
 from unittest.mock import patch
 
 import pytest
 
-from repvision.config import Arm
+from repvision.config import AppConfig, Arm
 from repvision.pose_detector import (
     ArmLandmarks,
     BoundingBox,
@@ -13,7 +14,9 @@ from repvision.pose_detector import (
     Point2D,
     PoseObservation,
     PoseDetectorError,
+    PoseDetector,
     PoseInferenceError,
+    PoseModel,
     PoseModelLoadError,
     PoseResultError,
     PoseStatus,
@@ -65,6 +68,19 @@ def test_ultralytics_loader_explains_model_failure() -> None:
         pytest.raises(PoseModelLoadError, match="broken-pose.pt.*invalid checkpoint"),
     ):
         load_ultralytics_model("broken-pose.pt")
+
+
+def test_detector_loads_configured_model_once() -> None:
+    loaded_names: list[str] = []
+    sentinel_model = cast(PoseModel, object())
+
+    detector = PoseDetector(
+        AppConfig(model_name="chosen-pose.pt"),
+        model_factory=lambda name: loaded_names.append(name) or sentinel_model,
+    )
+
+    assert detector.config.model_name == "chosen-pose.pt"
+    assert loaded_names == ["chosen-pose.pt"]
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:

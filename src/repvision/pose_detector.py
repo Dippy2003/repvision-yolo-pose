@@ -7,7 +7,7 @@ from math import isfinite
 from typing import Protocol
 
 from repvision.camera import Frame
-from repvision.config import Arm
+from repvision.config import AppConfig, Arm
 
 
 class PoseDetectorError(RuntimeError):
@@ -193,3 +193,15 @@ def select_primary_person(persons: tuple[PersonPose, ...]) -> PersonPose | None:
     """Select the largest valid person, preserving model order for area ties."""
     valid_people = (person for person in persons if person.box.area > 0.0)
     return max(valid_people, key=lambda person: person.box.area, default=None)
+
+
+class PoseDetector:
+    """Run one configured pose model and return application-owned data."""
+
+    def __init__(
+        self,
+        config: AppConfig,
+        model_factory: PoseModelFactory = load_ultralytics_model,
+    ) -> None:
+        self.config = config
+        self._model = model_factory(config.model_name)
