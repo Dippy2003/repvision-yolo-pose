@@ -189,6 +189,24 @@ def test_pose_array_shapes_are_validated(
         _validate_pose_shapes(boxes, confidences, keypoints)
 
 
+def test_pose_person_counts_must_match() -> None:
+    with pytest.raises(PoseResultError, match="person counts do not match"):
+        _validate_pose_shapes(
+            np.zeros((2, 4)), np.zeros((2,)), np.zeros((1, 17, 3))
+        )
+
+
+def test_detected_person_requires_arm_and_hip_keypoints() -> None:
+    with pytest.raises(PoseResultError, match="required COCO joints"):
+        _validate_pose_shapes(
+            np.zeros((1, 4)), np.zeros((1,)), np.zeros((1, 12, 3))
+        )
+
+
+def test_empty_pose_arrays_do_not_require_landmark_rows() -> None:
+    _validate_pose_shapes(np.zeros((0, 4)), np.zeros((0,)), np.zeros((0, 0, 3)))
+
+
 def test_empty_observation_represents_a_frame_without_people() -> None:
     observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
 
