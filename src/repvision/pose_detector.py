@@ -23,3 +23,15 @@ class Point2D:
 
     x: float
     y: float
+
+
+@dataclass(frozen=True, slots=True)
+class Landmark:
+    """Pose point with its model-reported confidence."""
+
+    point: Point2D | None
+    confidence: float
+
+    def is_reliable(self, threshold: float) -> bool:
+        """Return whether this landmark is present and meets a threshold."""
+        return self.point is not None and self.confidence >= threshold
