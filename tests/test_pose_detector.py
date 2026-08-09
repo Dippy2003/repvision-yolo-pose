@@ -274,6 +274,34 @@ def test_detector_reports_missing_selected_arm_keypoints() -> None:
     assert observation.status is PoseStatus.MISSING_KEYPOINTS
 
 
+@pytest.mark.parametrize(
+    "low_confidence_index",
+    [
+        KeypointIndex.RIGHT_SHOULDER,
+        KeypointIndex.RIGHT_ELBOW,
+        KeypointIndex.RIGHT_WRIST,
+    ],
+)
+def test_detector_rejects_unreliable_movement_keypoints(
+    low_confidence_index: KeypointIndex,
+) -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    keypoints = np.full((1, 17, 3), [10.0, 20.0, 0.9], dtype=np.float64)
+    keypoints[0, low_confidence_index, 2] = 0.49
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 20.0, 30.0]]), np.asarray([0.8]), keypoints
+    )
+    detector = PoseDetector(
+        AppConfig(confidence_threshold=0.5, selected_arm=Arm.RIGHT),
+        model_factory=lambda _name: RecordingModel([result]),
+    )
+
+    observation = detector.detect(frame)
+
+    assert observation.selected_arm is not None
+    assert observation.status is PoseStatus.LOW_CONFIDENCE
+
+
 def test_landmark_row_preserves_coordinates_and_confidence() -> None:
     landmark = _landmark_from_row(np.asarray([14.0, 28.0, 0.75]))
 
