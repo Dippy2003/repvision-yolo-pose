@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
+from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,10 +35,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=defaults.input_size,
         help="square model inference size in pixels",
     )
-    parser.add_argument(
+    diagnostics = parser.add_mutually_exclusive_group()
+    diagnostics.add_argument(
         "--check-camera",
         action="store_true",
         help="open the camera, read one frame, and exit",
+    )
+    diagnostics.add_argument(
+        "--check-pose",
+        action="store_true",
+        help="load the model, analyze one camera frame, and exit",
     )
     return parser
 
@@ -59,6 +66,13 @@ def check_camera(config: AppConfig) -> tuple[int, ...]:
         return camera.read().shape
 
 
+def check_pose(config: AppConfig) -> PoseObservation:
+    """Load the model and analyze exactly one locally captured frame."""
+    detector = PoseDetector(config)
+    with Camera(config.camera_index) as camera:
+        return detector.detect(camera.read())
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate startup settings without starting future processing stages."""
     parser = build_parser()
@@ -70,6 +84,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         except CameraError as error:
             parser.error(str(error))
         print(f"Camera check passed (frame shape={frame_shape}).")
+        return 0
+    if args.check_pose:
+        try:
+            observation = check_pose(config)
+        except (CameraError, PoseDetectorError) as error:
+            parser.error(str(error))
+        print(
+            "Pose check passed "
+            f"(people={len(observation.persons)}, status={observation.status.value}, "
+            f"arm={config.selected_arm.value})."
+        )
         return 0
     print(
         "RepVision foundation is ready "

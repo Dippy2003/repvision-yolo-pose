@@ -4,6 +4,7 @@ import pytest
 
 from repvision.app import build_parser, config_from_args, main
 from repvision.config import Arm
+from repvision.pose_detector import PoseObservation, PoseStatus
 
 
 def test_cli_overrides_foundation_settings() -> None:
@@ -42,3 +43,16 @@ def test_camera_check_reports_single_frame_shape(
         assert main(["--check-camera"]) == 0
 
     assert "frame shape=(480, 640, 3)" in capsys.readouterr().out
+
+
+def test_pose_check_reports_structured_result(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
+    with patch("repvision.app.check_pose", return_value=observation):
+        assert main(["--check-pose", "--arm", "left"]) == 0
+
+    output = capsys.readouterr().out
+    assert "people=0" in output
+    assert "status=no_person" in output
+    assert "arm=left" in output
