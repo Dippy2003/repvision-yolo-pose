@@ -1,5 +1,7 @@
 """YOLO pose inference and typed keypoint extraction."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
@@ -110,6 +112,16 @@ def _validate_pose_shapes(
         raise PoseResultError("Box and keypoint person counts do not match.")
     if boxes.shape[0] and keypoints.shape[1] <= KeypointIndex.RIGHT_HIP:
         raise PoseResultError("Pose result does not include the required COCO joints.")
+
+
+def _landmark_from_row(row: NDArray[np.float64]) -> Landmark:
+    x, y, confidence = (float(value) for value in row[:3])
+    if not isfinite(confidence):
+        confidence = 0.0
+    point = None
+    if confidence > 0.0 and isfinite(x) and isfinite(y):
+        point = Point2D(x, y)
+    return Landmark(point, confidence)
 
 
 class KeypointIndex(IntEnum):

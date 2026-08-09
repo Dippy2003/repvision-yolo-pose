@@ -24,6 +24,7 @@ from repvision.pose_detector import (
     PoseResultError,
     PoseStatus,
     _as_float_array,
+    _landmark_from_row,
     _result_components,
     _run_model,
     _validate_pose_shapes,
@@ -205,6 +206,26 @@ def test_detected_person_requires_arm_and_hip_keypoints() -> None:
 
 def test_empty_pose_arrays_do_not_require_landmark_rows() -> None:
     _validate_pose_shapes(np.zeros((0, 4)), np.zeros((0,)), np.zeros((0, 0, 3)))
+
+
+def test_landmark_row_preserves_coordinates_and_confidence() -> None:
+    landmark = _landmark_from_row(np.asarray([14.0, 28.0, 0.75]))
+
+    assert landmark == Landmark(Point2D(14.0, 28.0), 0.75)
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        np.asarray([0.0, 0.0, 0.0]),
+        np.asarray([float("nan"), 20.0, 0.8]),
+        np.asarray([10.0, 20.0, float("nan")]),
+    ],
+)
+def test_missing_or_nonfinite_keypoints_have_no_position(
+    row: NDArray[np.float64],
+) -> None:
+    assert _landmark_from_row(row).point is None
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
