@@ -23,6 +23,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=defaults.selected_arm,
     )
     parser.add_argument(
+        "--confidence",
+        type=float,
+        default=defaults.confidence_threshold,
+        help="minimum confidence for shoulder, elbow, and wrist",
+    )
+    parser.add_argument(
+        "--input-size",
+        type=int,
+        default=defaults.input_size,
+        help="square model inference size in pixels",
+    )
+    parser.add_argument(
         "--check-camera",
         action="store_true",
         help="open the camera, read one frame, and exit",
@@ -36,6 +48,8 @@ def config_from_args(args: argparse.Namespace) -> AppConfig:
         model_name=args.model,
         camera_index=args.camera_index,
         selected_arm=args.arm,
+        confidence_threshold=args.confidence,
+        input_size=args.input_size,
     )
 
 
