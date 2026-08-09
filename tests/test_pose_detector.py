@@ -2,7 +2,13 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from repvision.pose_detector import BoundingBox, KeypointIndex, Landmark, Point2D
+from repvision.pose_detector import (
+    BoundingBox,
+    KeypointIndex,
+    Landmark,
+    PersonPose,
+    Point2D,
+)
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -45,3 +51,11 @@ def test_bounding_box_area_rejects_invalid_geometry(
     box: BoundingBox, area: float
 ) -> None:
     assert box.area == area
+
+
+def test_person_pose_handles_missing_keypoint_indices() -> None:
+    landmarks = tuple(Landmark(Point2D(float(i), float(i)), 0.9) for i in range(8))
+    person = PersonPose(BoundingBox(0.0, 0.0, 10.0, 20.0), landmarks, 0.8)
+
+    assert person.landmark(KeypointIndex.LEFT_ELBOW) == landmarks[7]
+    assert person.landmark(KeypointIndex.LEFT_WRIST) is None

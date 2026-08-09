@@ -54,3 +54,18 @@ class BoundingBox:
         if not all(isfinite(value) for value in coordinates):
             return 0.0
         return max(0.0, self.x2 - self.x1) * max(0.0, self.y2 - self.y1)
+
+
+@dataclass(frozen=True, slots=True)
+class PersonPose:
+    """One detected person's box and ordered COCO landmarks."""
+
+    box: BoundingBox
+    landmarks: tuple[Landmark, ...]
+    detection_confidence: float
+
+    def landmark(self, index: KeypointIndex) -> Landmark | None:
+        """Return a landmark when the model supplied the requested index."""
+        if index >= len(self.landmarks):
+            return None
+        return self.landmarks[index]
