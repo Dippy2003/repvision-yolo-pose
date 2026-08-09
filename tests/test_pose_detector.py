@@ -266,6 +266,24 @@ def test_empty_pose_result_returns_no_people() -> None:
     assert parse_pose_result(result) == ()
 
 
+def test_pose_result_preserves_person_box_keypoint_pairing() -> None:
+    keypoints = np.zeros((2, 17, 3), dtype=np.float64)
+    keypoints[0, :, :] = [10.0, 20.0, 0.7]
+    keypoints[1, :, :] = [30.0, 40.0, 0.9]
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 20.0, 20.0], [5.0, 5.0, 55.0, 65.0]]),
+        np.asarray([0.6, 0.95]),
+        keypoints,
+    )
+
+    first, second = parse_pose_result(result)
+
+    assert first.detection_confidence == 0.6
+    assert first.landmarks[5].point == Point2D(10.0, 20.0)
+    assert second.detection_confidence == 0.95
+    assert second.landmarks[5].point == Point2D(30.0, 40.0)
+
+
 def test_empty_observation_represents_a_frame_without_people() -> None:
     observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
 
