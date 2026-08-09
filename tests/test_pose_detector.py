@@ -64,6 +64,34 @@ def test_person_pose_handles_missing_keypoint_indices() -> None:
     assert person.landmark(KeypointIndex.LEFT_WRIST) is None
 
 
+def test_person_pose_extracts_selected_side_landmarks() -> None:
+    landmarks = tuple(
+        Landmark(Point2D(float(i), float(i + 1)), 0.9) for i in range(17)
+    )
+    person = PersonPose(BoundingBox(0.0, 0.0, 10.0, 20.0), landmarks, 0.8)
+
+    left = person.arm_landmarks(Arm.LEFT)
+    right = person.arm_landmarks(Arm.RIGHT)
+
+    assert left is not None and left.shoulder == landmarks[5]
+    assert left.elbow == landmarks[7]
+    assert left.wrist == landmarks[9]
+    assert left.hip == landmarks[11]
+    assert right is not None and right.shoulder == landmarks[6]
+    assert right.elbow == landmarks[8]
+    assert right.wrist == landmarks[10]
+    assert right.hip == landmarks[12]
+
+
+def test_person_pose_returns_no_arm_when_keypoints_are_missing() -> None:
+    landmarks = tuple(
+        Landmark(Point2D(float(i), float(i)), 0.9) for i in range(10)
+    )
+    person = PersonPose(BoundingBox(0.0, 0.0, 10.0, 20.0), landmarks, 0.8)
+
+    assert person.arm_landmarks(Arm.RIGHT) is None
+
+
 def test_arm_selection_maps_to_matching_coco_side() -> None:
     assert arm_keypoint_indices(Arm.LEFT) == (
         KeypointIndex.LEFT_SHOULDER,

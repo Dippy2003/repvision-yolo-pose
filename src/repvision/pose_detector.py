@@ -108,3 +108,15 @@ class PersonPose:
         if index >= len(self.landmarks):
             return None
         return self.landmarks[index]
+
+    def arm_landmarks(self, arm: Arm) -> ArmLandmarks | None:
+        """Extract one arm, or return None when any expected joint is absent."""
+        selected = tuple(self.landmark(index) for index in arm_keypoint_indices(arm))
+        if any(landmark is None for landmark in selected):
+            return None
+        shoulder, elbow, wrist, hip = selected
+        assert shoulder is not None
+        assert elbow is not None
+        assert wrist is not None
+        assert hip is not None
+        return ArmLandmarks(arm, shoulder, elbow, wrist, hip)
