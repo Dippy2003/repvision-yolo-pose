@@ -167,6 +167,38 @@ def test_detector_handles_inference_without_people() -> None:
     assert len(model.calls) == 1
 
 
+def test_detector_tracks_configured_arm_on_largest_person() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    keypoints = np.zeros((2, 17, 3), dtype=np.float64)
+    for person_index in range(2):
+        for keypoint_index in range(17):
+            keypoints[person_index, keypoint_index] = [
+                float(100 * person_index + keypoint_index),
+                float(200 * person_index + keypoint_index),
+                0.9,
+            ]
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 30.0, 40.0]]),
+        np.asarray([0.8, 0.7]),
+        keypoints,
+    )
+    model = RecordingModel([result])
+    detector = PoseDetector(
+        AppConfig(selected_arm=Arm.RIGHT), model_factory=lambda _name: model
+    )
+
+    observation = detector.detect(frame)
+
+    assert observation.status is PoseStatus.TRACKING
+    assert observation.primary_person is observation.persons[1]
+    assert observation.selected_arm is not None
+    assert observation.selected_arm.arm is Arm.RIGHT
+    assert observation.selected_arm.shoulder.point == Point2D(106.0, 206.0)
+    assert observation.selected_arm.elbow.point == Point2D(108.0, 208.0)
+    assert observation.selected_arm.wrist.point == Point2D(110.0, 210.0)
+    assert observation.selected_arm.hip.point == Point2D(112.0, 212.0)
+
+
 def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
     tensor = TensorLike([[1.0, 2.0], [3.0, 4.0]])
 
