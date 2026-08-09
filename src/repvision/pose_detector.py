@@ -1,7 +1,7 @@
 """YOLO pose inference and typed keypoint extraction."""
 
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from math import isfinite
 
 from repvision.config import Arm
@@ -18,6 +18,15 @@ class KeypointIndex(IntEnum):
     RIGHT_WRIST = 10
     LEFT_HIP = 11
     RIGHT_HIP = 12
+
+
+class PoseStatus(StrEnum):
+    """Visibility state produced by one pose inference."""
+
+    TRACKING = "tracking"
+    NO_PERSON = "no_person"
+    MISSING_KEYPOINTS = "missing_keypoints"
+    LOW_CONFIDENCE = "low_confidence"
 
 
 def arm_keypoint_indices(

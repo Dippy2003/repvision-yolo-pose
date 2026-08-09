@@ -10,6 +10,7 @@ from repvision.pose_detector import (
     Landmark,
     PersonPose,
     Point2D,
+    PoseStatus,
     arm_keypoint_indices,
 )
 
@@ -23,6 +24,13 @@ def test_coco_arm_keypoint_indices_match_model_schema() -> None:
     assert KeypointIndex.RIGHT_WRIST == 10
     assert KeypointIndex.LEFT_HIP == 11
     assert KeypointIndex.RIGHT_HIP == 12
+
+
+def test_pose_status_values_are_stable_for_consumers() -> None:
+    assert PoseStatus.TRACKING.value == "tracking"
+    assert PoseStatus.NO_PERSON.value == "no_person"
+    assert PoseStatus.MISSING_KEYPOINTS.value == "missing_keypoints"
+    assert PoseStatus.LOW_CONFIDENCE.value == "low_confidence"
 
 
 def test_point_coordinates_are_immutable() -> None:
