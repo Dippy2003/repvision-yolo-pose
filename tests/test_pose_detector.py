@@ -1,4 +1,8 @@
-from repvision.pose_detector import KeypointIndex
+from dataclasses import FrozenInstanceError
+
+import pytest
+
+from repvision.pose_detector import KeypointIndex, Point2D
 
 
 def test_coco_arm_keypoint_indices_match_model_schema() -> None:
@@ -10,3 +14,11 @@ def test_coco_arm_keypoint_indices_match_model_schema() -> None:
     assert KeypointIndex.RIGHT_WRIST == 10
     assert KeypointIndex.LEFT_HIP == 11
     assert KeypointIndex.RIGHT_HIP == 12
+
+
+def test_point_coordinates_are_immutable() -> None:
+    point = Point2D(x=12.5, y=24.0)
+
+    assert (point.x, point.y) == (12.5, 24.0)
+    with pytest.raises(FrozenInstanceError):
+        point.x = 9.0  # type: ignore[misc]
