@@ -78,6 +78,20 @@ def _as_float_array(value: object) -> NDArray[np.float64]:
         raise PoseResultError("Pose result contains non-numeric values.") from error
 
 
+def _result_components(result: object) -> tuple[object, object, object] | None:
+    boxes = getattr(result, "boxes", None)
+    keypoints = getattr(result, "keypoints", None)
+    if boxes is None or keypoints is None:
+        return None
+
+    coordinates = getattr(boxes, "xyxy", None)
+    confidences = getattr(boxes, "conf", None)
+    landmark_data = getattr(keypoints, "data", None)
+    if coordinates is None or confidences is None or landmark_data is None:
+        return None
+    return coordinates, confidences, landmark_data
+
+
 class KeypointIndex(IntEnum):
     """COCO human-pose indices used by RepVision."""
 

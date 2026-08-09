@@ -1,4 +1,5 @@
 from dataclasses import FrozenInstanceError
+from types import SimpleNamespace
 from typing import cast
 from unittest.mock import patch
 
@@ -23,6 +24,7 @@ from repvision.pose_detector import (
     PoseResultError,
     PoseStatus,
     _as_float_array,
+    _result_components,
     _run_model,
     arm_keypoint_indices,
     load_ultralytics_model,
@@ -153,6 +155,18 @@ def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
 def test_non_numeric_model_output_is_rejected() -> None:
     with pytest.raises(PoseResultError, match="non-numeric"):
         _as_float_array([["not-a-number"]])
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        SimpleNamespace(boxes=None, keypoints=None),
+        SimpleNamespace(boxes=SimpleNamespace(), keypoints=SimpleNamespace()),
+        SimpleNamespace(boxes=SimpleNamespace(xyxy=[]), keypoints=None),
+    ],
+)
+def test_result_components_handle_frames_without_pose_data(result: object) -> None:
+    assert _result_components(result) is None
 
 
 def test_empty_observation_represents_a_frame_without_people() -> None:
