@@ -1,9 +1,12 @@
 """YOLO pose inference and typed keypoint extraction."""
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from math import isfinite
+from typing import Protocol
 
+from repvision.camera import Frame
 from repvision.config import Arm
 
 
@@ -21,6 +24,17 @@ class PoseInferenceError(PoseDetectorError):
 
 class PoseResultError(PoseDetectorError):
     """Raised when model output does not match the expected pose schema."""
+
+
+class PoseModel(Protocol):
+    """Inference surface required from an Ultralytics pose model."""
+
+    def predict(
+        self, *, source: Frame, imgsz: int, verbose: bool
+    ) -> Sequence[object]: ...
+
+
+PoseModelFactory = Callable[[str], PoseModel]
 
 
 class KeypointIndex(IntEnum):
