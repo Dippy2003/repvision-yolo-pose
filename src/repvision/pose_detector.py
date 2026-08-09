@@ -296,3 +296,22 @@ class PoseDetector:
     ) -> None:
         self.config = config
         self._model = model_factory(config.model_name)
+
+    def detect(self, frame: Frame) -> PoseObservation:
+        """Run pose inference and extract the configured arm from one person."""
+        results = _run_model(self._model, frame, self.config.input_size)
+        persons = parse_pose_result(results[0]) if results else ()
+        primary_person = select_primary_person(persons)
+        if primary_person is None:
+            return PoseObservation(persons, None, None, PoseStatus.NO_PERSON)
+
+        selected_arm = primary_person.arm_landmarks(self.config.selected_arm)
+        if selected_arm is None:
+            status = PoseStatus.MISSING_KEYPOINTS
+        elif not selected_arm.movement_points_reliable(
+            self.config.confidence_threshold
+        ):
+            status = PoseStatus.LOW_CONFIDENCE
+        else:
+            status = PoseStatus.TRACKING
+        return PoseObservation(persons, primary_person, selected_arm, status)

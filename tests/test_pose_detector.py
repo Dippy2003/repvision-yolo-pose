@@ -156,6 +156,17 @@ def test_model_inference_wraps_expected_backend_failures() -> None:
         _run_model(FailingModel(), frame, 640)
 
 
+def test_detector_handles_inference_without_people() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    model = RecordingModel([])
+    detector = PoseDetector(AppConfig(), model_factory=lambda _name: model)
+
+    observation = detector.detect(frame)
+
+    assert observation == PoseObservation((), None, None, PoseStatus.NO_PERSON)
+    assert len(model.calls) == 1
+
+
 def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
     tensor = TensorLike([[1.0, 2.0], [3.0, 4.0]])
 
