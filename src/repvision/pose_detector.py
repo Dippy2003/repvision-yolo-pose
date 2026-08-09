@@ -41,7 +41,18 @@ def load_ultralytics_model(model_name: str) -> PoseModel:
     """Load the configured Ultralytics model on first detector construction."""
     from ultralytics import YOLO
 
-    return YOLO(model_name)
+    try:
+        return YOLO(model_name)
+    except (
+        ConnectionError,
+        FileNotFoundError,
+        OSError,
+        RuntimeError,
+        ValueError,
+    ) as error:
+        raise PoseModelLoadError(
+            f"Could not load pose model '{model_name}': {error}"
+        ) from error
 
 
 class KeypointIndex(IntEnum):

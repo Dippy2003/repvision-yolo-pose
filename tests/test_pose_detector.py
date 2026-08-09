@@ -59,6 +59,14 @@ def test_ultralytics_loader_forwards_configured_model_name() -> None:
     yolo.assert_called_once_with("chosen-pose.pt")
 
 
+def test_ultralytics_loader_explains_model_failure() -> None:
+    with (
+        patch("ultralytics.YOLO", side_effect=RuntimeError("invalid checkpoint")),
+        pytest.raises(PoseModelLoadError, match="broken-pose.pt.*invalid checkpoint"),
+    ):
+        load_ultralytics_model("broken-pose.pt")
+
+
 def test_empty_observation_represents_a_frame_without_people() -> None:
     observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
 
