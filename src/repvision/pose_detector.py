@@ -110,8 +110,6 @@ def _validate_pose_shapes(
     person_counts = {boxes.shape[0], confidences.shape[0], keypoints.shape[0]}
     if len(person_counts) != 1:
         raise PoseResultError("Box and keypoint person counts do not match.")
-    if boxes.shape[0] and keypoints.shape[1] <= KeypointIndex.RIGHT_HIP:
-        raise PoseResultError("Pose result does not include the required COCO joints.")
 
 
 def _landmark_from_row(row: NDArray[np.float64]) -> Landmark:

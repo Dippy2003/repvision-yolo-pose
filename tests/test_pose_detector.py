@@ -252,15 +252,26 @@ def test_pose_person_counts_must_match() -> None:
         )
 
 
-def test_detected_person_requires_arm_and_hip_keypoints() -> None:
-    with pytest.raises(PoseResultError, match="required COCO joints"):
-        _validate_pose_shapes(
-            np.zeros((1, 4)), np.zeros((1,)), np.zeros((1, 12, 3))
-        )
-
-
 def test_empty_pose_arrays_do_not_require_landmark_rows() -> None:
     _validate_pose_shapes(np.zeros((0, 4)), np.zeros((0,)), np.zeros((0, 0, 3)))
+
+
+def test_detector_reports_missing_selected_arm_keypoints() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    keypoints = np.full((1, 10, 3), [10.0, 20.0, 0.9], dtype=np.float64)
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 20.0, 30.0]]), np.asarray([0.8]), keypoints
+    )
+    detector = PoseDetector(
+        AppConfig(selected_arm=Arm.RIGHT),
+        model_factory=lambda _name: RecordingModel([result]),
+    )
+
+    observation = detector.detect(frame)
+
+    assert observation.primary_person is not None
+    assert observation.selected_arm is None
+    assert observation.status is PoseStatus.MISSING_KEYPOINTS
 
 
 def test_landmark_row_preserves_coordinates_and_confidence() -> None:
