@@ -302,6 +302,29 @@ def test_detector_rejects_unreliable_movement_keypoints(
     assert observation.status is PoseStatus.LOW_CONFIDENCE
 
 
+def test_detector_uses_left_side_when_configured() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    keypoints = np.asarray(
+        [[[float(i), float(i + 20), 0.9] for i in range(17)]], dtype=np.float64
+    )
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 20.0, 30.0]]), np.asarray([0.8]), keypoints
+    )
+    detector = PoseDetector(
+        AppConfig(selected_arm=Arm.LEFT),
+        model_factory=lambda _name: RecordingModel([result]),
+    )
+
+    observation = detector.detect(frame)
+
+    assert observation.selected_arm is not None
+    assert observation.selected_arm.arm is Arm.LEFT
+    assert observation.selected_arm.shoulder.point == Point2D(5.0, 25.0)
+    assert observation.selected_arm.elbow.point == Point2D(7.0, 27.0)
+    assert observation.selected_arm.wrist.point == Point2D(9.0, 29.0)
+    assert observation.selected_arm.hip.point == Point2D(11.0, 31.0)
+
+
 def test_landmark_row_preserves_coordinates_and_confidence() -> None:
     landmark = _landmark_from_row(np.asarray([14.0, 28.0, 0.75]))
 
