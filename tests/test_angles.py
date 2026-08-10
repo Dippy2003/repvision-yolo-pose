@@ -134,3 +134,13 @@ def test_smoother_ignores_missing_or_nonfinite_values(
     assert smoother.add(missing) is None
     assert smoother.sample_count == 1
     assert smoother.value == 90.0
+
+
+@pytest.mark.parametrize("invalid", [-0.1, 180.1])
+def test_smoother_rejects_out_of_range_angles(invalid: float) -> None:
+    smoother = AngleSmoother(window_size=3)
+
+    with pytest.raises(ValueError, match="between 0 and 180"):
+        smoother.add(invalid)
+
+    assert smoother.sample_count == 0

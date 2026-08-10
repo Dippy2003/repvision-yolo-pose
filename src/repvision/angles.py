@@ -33,6 +33,8 @@ class AngleSmoother:
         """Add one valid angle; missing/non-finite measurements return None."""
         if angle is None or not isfinite(angle):
             return None
+        if not 0.0 <= angle <= 180.0:
+            raise ValueError("angle must be between 0 and 180 degrees")
         self._history.append(float(angle))
         smoothed = self.value
         assert smoothed is not None
