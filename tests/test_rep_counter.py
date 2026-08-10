@@ -275,3 +275,28 @@ def test_curl_tracker_counts_reliable_smoothed_arm_movements() -> None:
     assert completed.count == 1
     assert completed.stage is MovementStage.UP
     assert completed.rep_completed
+
+
+def test_curl_tracker_does_not_advance_on_low_confidence_landmarks() -> None:
+    tracker = CurlTracker(
+        AppConfig(
+            confidence_threshold=0.5,
+            smoothing_window=1,
+            confirmation_frames=2,
+            cooldown_seconds=0.0,
+        )
+    )
+    tracker.update(arm_at_angle(160.0), timestamp=0.0)
+
+    unreliable = tracker.update(
+        arm_at_angle(160.0, confidence=0.4), timestamp=0.1
+    )
+    first_visible = tracker.update(arm_at_angle(160.0), timestamp=0.2)
+    confirmed = tracker.update(arm_at_angle(160.0), timestamp=0.3)
+
+    assert unreliable.raw_angle is None
+    assert unreliable.smoothed_angle is None
+    assert unreliable.stage is MovementStage.UNKNOWN
+    assert tracker.smoother.sample_count == 1
+    assert first_visible.stage is MovementStage.UNKNOWN
+    assert confirmed.stage is MovementStage.DOWN
