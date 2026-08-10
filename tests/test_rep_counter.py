@@ -177,3 +177,21 @@ def test_missing_measurement_breaks_pending_transition(
     assert missing_update.count == 0
     assert first_visible.count == 0
     assert completed.count == 1
+
+
+def test_cooldown_delays_implausibly_fast_second_rep() -> None:
+    tracker = counter(confirmation_frames=1, cooldown_seconds=0.5)
+    tracker.update(160.0, timestamp=0.0)
+    first_rep = tracker.update(40.0, timestamp=1.0)
+    tracker.update(160.0, timestamp=1.1)
+
+    too_soon = tracker.update(40.0, timestamp=1.2)
+    after_cooldown = tracker.update(40.0, timestamp=1.5)
+
+    assert first_rep.count == 1
+    assert too_soon.count == 1
+    assert too_soon.stage is MovementStage.DOWN
+    assert not too_soon.rep_completed
+    assert after_cooldown.count == 2
+    assert after_cooldown.stage is MovementStage.UP
+    assert after_cooldown.rep_completed
