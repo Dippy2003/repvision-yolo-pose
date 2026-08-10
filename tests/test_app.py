@@ -56,3 +56,6 @@ def test_pose_check_reports_structured_result(
     assert "people=0" in output
     assert "status=no_person" in output
     assert "arm=left" in output
+    assert "angle=unavailable" in output
+    assert "stage=unknown" in output
+    assert "reps=0" in output

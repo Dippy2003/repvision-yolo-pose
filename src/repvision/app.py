@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
+from repvision.rep_counter import CurlTracker
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -90,10 +91,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             observation = check_pose(config)
         except (CameraError, PoseDetectorError) as error:
             parser.error(str(error))
+        curl_update = CurlTracker(config).update(observation.selected_arm)
+        angle_text = (
+            "unavailable"
+            if curl_update.smoothed_angle is None
+            else f"{curl_update.smoothed_angle:.1f}"
+        )
         print(
             "Pose check passed "
             f"(people={len(observation.persons)}, status={observation.status.value}, "
-            f"arm={config.selected_arm.value})."
+            f"arm={config.selected_arm.value}, angle={angle_text}, "
+            f"stage={curl_update.stage.value}, reps={curl_update.count})."
         )
         return 0
     print(
