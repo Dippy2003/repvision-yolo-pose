@@ -3,7 +3,12 @@ from math import sqrt
 import numpy as np
 import pytest
 
-from repvision.angles import _clamp_cosine, _coordinates, calculate_elbow_angle
+from repvision.angles import (
+    AngleSmoother,
+    _clamp_cosine,
+    _coordinates,
+    calculate_elbow_angle,
+)
 
 
 @pytest.mark.parametrize(
@@ -86,3 +91,13 @@ def test_cosine_is_clamped_for_floating_point_safety(
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
 def test_nonfinite_coordinates_return_no_angle(invalid: float) -> None:
     assert calculate_elbow_angle((invalid, 0.0), (1.0, 0.0), (2.0, 0.0)) is None
+
+
+@pytest.mark.parametrize("window_size", [0, -1])
+def test_smoother_requires_positive_window_size(window_size: int) -> None:
+    with pytest.raises(ValueError, match="window_size must be positive"):
+        AngleSmoother(window_size)
+
+
+def test_new_smoother_has_no_samples() -> None:
+    assert AngleSmoother(window_size=5).sample_count == 0

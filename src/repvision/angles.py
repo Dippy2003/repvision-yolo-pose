@@ -1,9 +1,25 @@
 """Pure elbow-angle calculation and robust temporal smoothing."""
 
+from collections import deque
 from collections.abc import Sequence
 from math import acos, degrees, hypot, isfinite
 
 Point2DLike = Sequence[float]
+
+
+class AngleSmoother:
+    """Maintain a bounded history of valid elbow angles."""
+
+    def __init__(self, window_size: int) -> None:
+        if window_size < 1:
+            raise ValueError("window_size must be positive")
+        self.window_size = window_size
+        self._history: deque[float] = deque(maxlen=window_size)
+
+    @property
+    def sample_count(self) -> int:
+        """Return the number of valid angles currently retained."""
+        return len(self._history)
 
 
 def _coordinates(point: Point2DLike) -> tuple[float, float]:
