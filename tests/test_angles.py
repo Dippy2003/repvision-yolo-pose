@@ -3,7 +3,7 @@ from math import sqrt
 import numpy as np
 import pytest
 
-from repvision.angles import _coordinates, calculate_elbow_angle
+from repvision.angles import _clamp_cosine, _coordinates, calculate_elbow_angle
 
 
 @pytest.mark.parametrize(
@@ -71,3 +71,13 @@ def test_zero_length_limb_vectors_return_no_angle(
     wrist: tuple[float, float],
 ) -> None:
     assert calculate_elbow_angle(shoulder, elbow, wrist) is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(-1.0000000001, -1.0), (-0.5, -0.5), (0.5, 0.5), (1.0000000001, 1.0)],
+)
+def test_cosine_is_clamped_for_floating_point_safety(
+    value: float, expected: float
+) -> None:
+    assert _clamp_cosine(value) == expected
