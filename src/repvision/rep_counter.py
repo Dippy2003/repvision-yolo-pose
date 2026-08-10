@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 from math import isfinite
+from time import monotonic
 
 
 class MovementStage(StrEnum):
@@ -46,6 +47,9 @@ class RepCounter:
         self.cooldown_seconds = cooldown_seconds
         self.count = 0
         self.stage = MovementStage.UNKNOWN
+        self._candidate: MovementStage | None = None
+        self._candidate_frames = 0
+        self._last_rep_time: float | None = None
 
     def snapshot(
         self, *, transition_accepted: bool = False, rep_completed: bool = False
@@ -64,3 +68,39 @@ class RepCounter:
         if angle <= self.up_threshold:
             return MovementStage.UP
         return None
+
+    def update(
+        self, angle: float | None, *, timestamp: float | None = None
+    ) -> RepUpdate:
+        """Process one angle without accepting unconfirmed endpoint changes."""
+        target = self.classify(angle)
+        if target is None or target is self.stage:
+            self._clear_candidate()
+            return self.snapshot()
+
+        if target is self._candidate:
+            self._candidate_frames += 1
+        else:
+            self._candidate = target
+            self._candidate_frames = 1
+        if self._candidate_frames < self.confirmation_frames:
+            return self.snapshot()
+
+        now = monotonic() if timestamp is None else timestamp
+        rep_completed = self.stage is MovementStage.DOWN and target is MovementStage.UP
+        if (
+            rep_completed
+            and self._last_rep_time is not None
+            and now - self._last_rep_time < self.cooldown_seconds
+        ):
+            return self.snapshot()
+        if rep_completed:
+            self.count += 1
+            self._last_rep_time = now
+        self.stage = target
+        self._clear_candidate()
+        return self.snapshot(transition_accepted=True, rep_completed=rep_completed)
+
+    def _clear_candidate(self) -> None:
+        self._candidate = None
+        self._candidate_frames = 0

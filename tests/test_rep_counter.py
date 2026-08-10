@@ -59,3 +59,17 @@ def test_angle_classification_uses_threshold_boundaries(
 
 def test_new_counter_snapshot_is_unknown_and_empty() -> None:
     assert counter().snapshot() == RepUpdate(0, MovementStage.UNKNOWN)
+
+
+def test_endpoint_requires_configured_confirmation_frames() -> None:
+    tracker = counter(confirmation_frames=3)
+
+    first = tracker.update(160.0, timestamp=0.0)
+    second = tracker.update(160.0, timestamp=0.1)
+    third = tracker.update(160.0, timestamp=0.2)
+
+    assert first.stage is MovementStage.UNKNOWN
+    assert second.stage is MovementStage.UNKNOWN
+    assert not second.transition_accepted
+    assert third.stage is MovementStage.DOWN
+    assert third.transition_accepted
