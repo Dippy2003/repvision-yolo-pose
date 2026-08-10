@@ -73,3 +73,21 @@ def test_endpoint_requires_configured_confirmation_frames() -> None:
     assert not second.transition_accepted
     assert third.stage is MovementStage.DOWN
     assert third.transition_accepted
+
+
+def test_confirmed_down_to_up_transition_counts_one_rep() -> None:
+    tracker = counter(confirmation_frames=2)
+
+    tracker.update(160.0, timestamp=0.0)
+    down = tracker.update(160.0, timestamp=0.1)
+    tracker.update(40.0, timestamp=1.0)
+    completed = tracker.update(40.0, timestamp=1.1)
+
+    assert down.stage is MovementStage.DOWN
+    assert down.count == 0
+    assert completed == RepUpdate(
+        count=1,
+        stage=MovementStage.UP,
+        transition_accepted=True,
+        rep_completed=True,
+    )
