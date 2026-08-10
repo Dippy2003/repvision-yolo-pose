@@ -91,3 +91,17 @@ def test_confirmed_down_to_up_transition_counts_one_rep() -> None:
         transition_accepted=True,
         rep_completed=True,
     )
+
+
+def test_repeated_frames_in_same_state_do_not_double_count() -> None:
+    tracker = counter(confirmation_frames=2)
+    for timestamp, angle in enumerate([160.0, 160.0, 40.0, 40.0]):
+        tracker.update(angle, timestamp=float(timestamp))
+
+    repeated_updates = [
+        tracker.update(40.0, timestamp=float(timestamp)) for timestamp in range(4, 10)
+    ]
+
+    assert tracker.count == 1
+    assert all(update.count == 1 for update in repeated_updates)
+    assert all(not update.rep_completed for update in repeated_updates)
