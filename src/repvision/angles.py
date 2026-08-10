@@ -29,8 +29,10 @@ class AngleSmoother:
             return None
         return float(median(self._history))
 
-    def add(self, angle: float) -> float:
-        """Add one angle and return the median of the retained window."""
+    def add(self, angle: float | None) -> float | None:
+        """Add one valid angle; missing/non-finite measurements return None."""
+        if angle is None or not isfinite(angle):
+            return None
         self._history.append(float(angle))
         smoothed = self.value
         assert smoothed is not None

@@ -122,3 +122,15 @@ def test_smoother_discards_values_outside_window() -> None:
 
     assert smoother.sample_count == 3
     assert smoother.value == 30.0
+
+
+@pytest.mark.parametrize("missing", [None, float("nan"), float("inf")])
+def test_smoother_ignores_missing_or_nonfinite_values(
+    missing: float | None,
+) -> None:
+    smoother = AngleSmoother(window_size=3)
+    smoother.add(90.0)
+
+    assert smoother.add(missing) is None
+    assert smoother.sample_count == 1
+    assert smoother.value == 90.0
