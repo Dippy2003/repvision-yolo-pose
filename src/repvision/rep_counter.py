@@ -104,3 +104,10 @@ class RepCounter:
     def _clear_candidate(self) -> None:
         self._candidate = None
         self._candidate_frames = 0
+
+    def reset(self) -> None:
+        """Clear repetitions, accepted stage, pending transition, and cooldown."""
+        self.count = 0
+        self.stage = MovementStage.UNKNOWN
+        self._last_rep_time = None
+        self._clear_candidate()

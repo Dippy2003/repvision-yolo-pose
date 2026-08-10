@@ -195,3 +195,17 @@ def test_cooldown_delays_implausibly_fast_second_rep() -> None:
     assert after_cooldown.count == 2
     assert after_cooldown.stage is MovementStage.UP
     assert after_cooldown.rep_completed
+
+
+def test_counter_reset_clears_all_movement_state() -> None:
+    tracker = counter(confirmation_frames=1)
+    tracker.update(160.0, timestamp=0.0)
+    tracker.update(40.0, timestamp=1.0)
+    tracker.update(160.0, timestamp=1.1)
+
+    tracker.reset()
+
+    assert tracker.snapshot() == RepUpdate(0, MovementStage.UNKNOWN)
+    after_reset = tracker.update(40.0, timestamp=1.2)
+    assert after_reset.stage is MovementStage.UP
+    assert after_reset.count == 0
