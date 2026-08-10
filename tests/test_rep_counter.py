@@ -158,3 +158,22 @@ def test_starting_in_up_position_does_not_create_a_rep() -> None:
     assert update.stage is MovementStage.UP
     assert update.count == 0
     assert not update.rep_completed
+
+
+@pytest.mark.parametrize("missing", [None, float("nan"), float("inf")])
+def test_missing_measurement_breaks_pending_transition(
+    missing: float | None,
+) -> None:
+    tracker = counter(confirmation_frames=2)
+    tracker.update(160.0, timestamp=0.0)
+    tracker.update(160.0, timestamp=0.1)
+    tracker.update(40.0, timestamp=1.0)
+
+    missing_update = tracker.update(missing, timestamp=1.1)
+    first_visible = tracker.update(40.0, timestamp=1.2)
+    completed = tracker.update(40.0, timestamp=1.3)
+
+    assert missing_update.stage is MovementStage.DOWN
+    assert missing_update.count == 0
+    assert first_visible.count == 0
+    assert completed.count == 1
