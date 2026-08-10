@@ -28,3 +28,18 @@ def test_straight_arm_angle_is_180_degrees() -> None:
     angle = calculate_elbow_angle((0.0, 0.0), (1.0, 0.0), (2.0, 0.0))
 
     assert angle == pytest.approx(180.0)
+
+
+@pytest.mark.parametrize(
+    ("shoulder", "elbow", "wrist"),
+    [
+        ((0.0, 1.0), (0.0, 0.0), (1.0, 0.0)),
+        ((4.0, 3.0), (2.0, 3.0), (2.0, 8.0)),
+    ],
+)
+def test_perpendicular_arm_angle_is_90_degrees(
+    shoulder: tuple[float, float],
+    elbow: tuple[float, float],
+    wrist: tuple[float, float],
+) -> None:
+    assert calculate_elbow_angle(shoulder, elbow, wrist) == pytest.approx(90.0)
