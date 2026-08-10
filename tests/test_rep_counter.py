@@ -130,3 +130,31 @@ def test_middle_angle_breaks_pending_confirmation_sequence() -> None:
 
     assert still_down.stage is MovementStage.DOWN
     assert still_down.count == 0
+
+
+@pytest.mark.parametrize(
+    "angles",
+    [
+        [90.0, 80.0, 70.0, 60.0],
+        [160.0, 160.0, 100.0, 80.0, 60.0],
+        [40.0, 40.0, 90.0, 100.0],
+    ],
+)
+def test_partial_movements_do_not_count(angles: list[float]) -> None:
+    tracker = counter(confirmation_frames=2)
+
+    for timestamp, angle in enumerate(angles):
+        tracker.update(angle, timestamp=float(timestamp))
+
+    assert tracker.count == 0
+
+
+def test_starting_in_up_position_does_not_create_a_rep() -> None:
+    tracker = counter(confirmation_frames=2)
+
+    tracker.update(40.0, timestamp=0.0)
+    update = tracker.update(40.0, timestamp=0.1)
+
+    assert update.stage is MovementStage.UP
+    assert update.count == 0
+    assert not update.rep_completed
