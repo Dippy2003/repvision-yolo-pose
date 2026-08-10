@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from repvision.angles import _coordinates
+from repvision.angles import _coordinates, calculate_elbow_angle
 
 
 @pytest.mark.parametrize(
@@ -22,3 +22,9 @@ def test_coordinates_accept_numeric_2d_inputs(
 def test_coordinates_reject_invalid_inputs(point: object) -> None:
     with pytest.raises(ValueError, match="exactly two numeric"):
         _coordinates(point)  # type: ignore[arg-type]
+
+
+def test_straight_arm_angle_is_180_degrees() -> None:
+    angle = calculate_elbow_angle((0.0, 0.0), (1.0, 0.0), (2.0, 0.0))
+
+    assert angle == pytest.approx(180.0)
