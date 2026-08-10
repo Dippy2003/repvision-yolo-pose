@@ -8,6 +8,7 @@ from statistics import median
 from repvision.pose_detector import ArmLandmarks
 
 Point2DLike = Sequence[float]
+_POINT_ERROR = "point must contain exactly two numeric coordinates"
 
 
 class AngleSmoother:
@@ -51,13 +52,13 @@ def _coordinates(point: Point2DLike) -> tuple[float, float]:
     try:
         values = tuple(point)
     except TypeError as error:
-        raise ValueError("point must contain exactly two numeric coordinates") from error
+        raise ValueError(_POINT_ERROR) from error
     if len(values) != 2:
-        raise ValueError("point must contain exactly two numeric coordinates")
+        raise ValueError(_POINT_ERROR)
     try:
         return float(values[0]), float(values[1])
     except (TypeError, ValueError) as error:
-        raise ValueError("point must contain exactly two numeric coordinates") from error
+        raise ValueError(_POINT_ERROR) from error
 
 
 def _clamp_cosine(value: float) -> float:
