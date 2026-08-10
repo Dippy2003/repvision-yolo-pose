@@ -1,7 +1,16 @@
+from math import cos, radians, sin
+
 import pytest
 
-from repvision.config import AppConfig
-from repvision.rep_counter import CurlUpdate, MovementStage, RepCounter, RepUpdate
+from repvision.config import AppConfig, Arm
+from repvision.pose_detector import ArmLandmarks, Landmark, Point2D
+from repvision.rep_counter import (
+    CurlTracker,
+    CurlUpdate,
+    MovementStage,
+    RepCounter,
+    RepUpdate,
+)
 
 
 def test_movement_stage_values_are_overlay_friendly() -> None:
@@ -19,6 +28,15 @@ def counter(**overrides: float | int) -> RepCounter:
     }
     settings.update(overrides)
     return RepCounter(**settings)  # type: ignore[arg-type]
+
+
+def arm_at_angle(angle: float, confidence: float = 0.9) -> ArmLandmarks:
+    elbow = Landmark(Point2D(0.0, 0.0), confidence)
+    shoulder = Landmark(Point2D(1.0, 0.0), confidence)
+    angle_radians = radians(angle)
+    wrist = Landmark(Point2D(cos(angle_radians), sin(angle_radians)), confidence)
+    hip = Landmark(Point2D(1.0, 1.0), confidence)
+    return ArmLandmarks(Arm.RIGHT, shoulder, elbow, wrist, hip)
 
 
 @pytest.mark.parametrize(
@@ -236,3 +254,24 @@ def test_counter_reset_clears_all_movement_state() -> None:
     after_reset = tracker.update(40.0, timestamp=1.2)
     assert after_reset.stage is MovementStage.UP
     assert after_reset.count == 0
+
+
+def test_curl_tracker_counts_reliable_smoothed_arm_movements() -> None:
+    tracker = CurlTracker(
+        AppConfig(
+            smoothing_window=1,
+            confirmation_frames=2,
+            cooldown_seconds=0.0,
+        )
+    )
+
+    tracker.update(arm_at_angle(160.0), timestamp=0.0)
+    tracker.update(arm_at_angle(160.0), timestamp=0.1)
+    tracker.update(arm_at_angle(40.0), timestamp=1.0)
+    completed = tracker.update(arm_at_angle(40.0), timestamp=1.1)
+
+    assert completed.raw_angle == pytest.approx(40.0)
+    assert completed.smoothed_angle == pytest.approx(40.0)
+    assert completed.count == 1
+    assert completed.stage is MovementStage.UP
+    assert completed.rep_completed

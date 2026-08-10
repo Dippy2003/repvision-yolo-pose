@@ -5,7 +5,9 @@ from enum import StrEnum
 from math import isfinite
 from time import monotonic
 
+from repvision.angles import AngleSmoother, calculate_arm_angle
 from repvision.config import AppConfig
+from repvision.pose_detector import ArmLandmarks
 
 
 class MovementStage(StrEnum):
@@ -134,3 +136,30 @@ class RepCounter:
         self.stage = MovementStage.UNKNOWN
         self._last_rep_time = None
         self._clear_candidate()
+
+
+class CurlTracker:
+    """Connect reliable arm landmarks to smoothing and repetition state."""
+
+    def __init__(self, config: AppConfig) -> None:
+        self.config = config
+        self.smoother = AngleSmoother(config.smoothing_window)
+        self.counter = RepCounter.from_config(config)
+
+    def update(
+        self,
+        landmarks: ArmLandmarks | None,
+        *,
+        timestamp: float | None = None,
+    ) -> CurlUpdate:
+        """Process one selected-arm observation."""
+        raw_angle = calculate_arm_angle(landmarks, self.config.confidence_threshold)
+        smoothed_angle = self.smoother.add(raw_angle)
+        rep_update = self.counter.update(smoothed_angle, timestamp=timestamp)
+        return CurlUpdate(
+            raw_angle,
+            smoothed_angle,
+            rep_update.count,
+            rep_update.stage,
+            rep_update.rep_completed,
+        )
