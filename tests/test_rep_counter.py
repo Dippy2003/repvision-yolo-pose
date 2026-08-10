@@ -300,3 +300,20 @@ def test_curl_tracker_does_not_advance_on_low_confidence_landmarks() -> None:
     assert tracker.smoother.sample_count == 1
     assert first_visible.stage is MovementStage.UNKNOWN
     assert confirmed.stage is MovementStage.DOWN
+
+
+def test_curl_tracker_reset_clears_smoothing_and_counter() -> None:
+    tracker = CurlTracker(
+        AppConfig(
+            smoothing_window=1,
+            confirmation_frames=1,
+            cooldown_seconds=0.0,
+        )
+    )
+    tracker.update(arm_at_angle(160.0), timestamp=0.0)
+    tracker.update(arm_at_angle(40.0), timestamp=1.0)
+
+    tracker.reset()
+
+    assert tracker.smoother.value is None
+    assert tracker.counter.snapshot() == RepUpdate(0, MovementStage.UNKNOWN)

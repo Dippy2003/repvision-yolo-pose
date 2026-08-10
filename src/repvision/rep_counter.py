@@ -163,3 +163,8 @@ class CurlTracker:
             rep_update.stage,
             rep_update.rep_completed,
         )
+
+    def reset(self) -> None:
+        """Clear both smoothing history and repetition state."""
+        self.smoother.reset()
+        self.counter.reset()
