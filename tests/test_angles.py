@@ -1,3 +1,5 @@
+from math import sqrt
+
 import numpy as np
 import pytest
 
@@ -43,3 +45,13 @@ def test_perpendicular_arm_angle_is_90_degrees(
     wrist: tuple[float, float],
 ) -> None:
     assert calculate_elbow_angle(shoulder, elbow, wrist) == pytest.approx(90.0)
+
+
+def test_bent_arm_angle_matches_known_45_degree_geometry() -> None:
+    diagonal = sqrt(0.5)
+
+    angle = calculate_elbow_angle(
+        (1.0, 0.0), (0.0, 0.0), (diagonal, diagonal)
+    )
+
+    assert angle == pytest.approx(45.0)
