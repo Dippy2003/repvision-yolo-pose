@@ -101,3 +101,12 @@ def test_smoother_requires_positive_window_size(window_size: int) -> None:
 
 def test_new_smoother_has_no_samples() -> None:
     assert AngleSmoother(window_size=5).sample_count == 0
+
+
+def test_smoother_uses_median_to_reject_single_outlier() -> None:
+    smoother = AngleSmoother(window_size=5)
+
+    values = [smoother.add(angle) for angle in (160.0, 158.0, 40.0)]
+
+    assert values == [160.0, 159.0, 158.0]
+    assert smoother.sample_count == 3

@@ -3,6 +3,7 @@
 from collections import deque
 from collections.abc import Sequence
 from math import acos, degrees, hypot, isfinite
+from statistics import median
 
 Point2DLike = Sequence[float]
 
@@ -20,6 +21,11 @@ class AngleSmoother:
     def sample_count(self) -> int:
         """Return the number of valid angles currently retained."""
         return len(self._history)
+
+    def add(self, angle: float) -> float:
+        """Add one angle and return the median of the retained window."""
+        self._history.append(float(angle))
+        return float(median(self._history))
 
 
 def _coordinates(point: Point2DLike) -> tuple[float, float]:
