@@ -5,8 +5,8 @@ and basic form feedback using Ultralytics YOLO Pose and OpenCV.
 
 Development is in progress. The current foundation provides validated runtime
 configuration, safe OpenCV camera access, YOLO pose inference, deterministic
-primary-person selection, selected-arm keypoint extraction, and offline tests.
-Movement analysis is not implemented yet.
+primary-person selection, selected-arm keypoint extraction, elbow-angle
+calculation, median smoothing, and a confirmed-frame repetition state machine.
 
 ## Requirements
 
@@ -43,7 +43,8 @@ repvision --check-camera
 ```
 
 Load the configured pose model, analyze one webcam frame locally, print the
-number of people and selected-arm visibility status, then exit:
+number of people, selected-arm visibility, elbow angle, movement stage, and
+repetition count, then exit:
 
 ```console
 repvision --check-pose
@@ -82,6 +83,23 @@ and hip. Shoulder, elbow, and wrist must each meet the confidence threshold for
 the result to have `tracking` status. Other possible statuses are `no_person`,
 `missing_keypoints`, and `low_confidence`.
 
+## Angle and repetition logic
+
+The elbow angle is calculated at the elbow from the shoulder-to-elbow and
+wrist-to-elbow vectors. Undefined zero-length or non-finite geometry produces
+no measurement. A bounded median window reduces single-frame pose noise while
+missing measurements are ignored.
+
+The repetition counter uses explicit `unknown`, `down`, and `up` stages. It
+requires configurable consecutive endpoint frames before accepting a stage.
+A repetition is counted only for a confirmed `down` to confirmed `up`
+transition. Middle-range jitter, repeated frames, partial movement, missing or
+low-confidence points, and movements inside the cooldown do not add reps.
+
+The one-frame pose diagnostic can verify angle extraction but cannot complete
+a repetition. Continuous live tracking and its controls are not implemented
+yet; the repetition behavior is currently verified by deterministic tests.
+
 ## Privacy
 
 RepVision is designed to process webcam frames locally. Neither diagnostic
@@ -90,7 +108,6 @@ and CSV artifacts are excluded from Git.
 
 ## Current limitations
 
-The live processing loop, angle calculation, smoothing, repetition state
-machine, visual interface, keyboard controls, form feedback, and session CSV
-logging remain to be implemented. A single 2D pose can also be affected by
-occlusion, camera placement, and depth ambiguity.
+The live processing loop, visual interface, keyboard controls, form feedback,
+and session CSV logging remain to be implemented. A single 2D pose can also be
+affected by occlusion, camera placement, and depth ambiguity.
