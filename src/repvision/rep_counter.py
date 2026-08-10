@@ -1,5 +1,6 @@
 """Confirmed-frame bicep-curl movement state and repetition counting."""
 
+from dataclasses import dataclass
 from enum import StrEnum
 from math import isfinite
 
@@ -10,6 +11,16 @@ class MovementStage(StrEnum):
     UNKNOWN = "unknown"
     DOWN = "down"
     UP = "up"
+
+
+@dataclass(frozen=True, slots=True)
+class RepUpdate:
+    """Observable result after processing one angle measurement."""
+
+    count: int
+    stage: MovementStage
+    transition_accepted: bool = False
+    rep_completed: bool = False
 
 
 class RepCounter:
@@ -35,6 +46,12 @@ class RepCounter:
         self.cooldown_seconds = cooldown_seconds
         self.count = 0
         self.stage = MovementStage.UNKNOWN
+
+    def snapshot(
+        self, *, transition_accepted: bool = False, rep_completed: bool = False
+    ) -> RepUpdate:
+        """Return the current public counter state."""
+        return RepUpdate(self.count, self.stage, transition_accepted, rep_completed)
 
     def classify(self, angle: float | None) -> MovementStage | None:
         """Classify an angle only when it crosses a configured endpoint."""

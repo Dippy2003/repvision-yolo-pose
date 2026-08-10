@@ -1,6 +1,6 @@
 import pytest
 
-from repvision.rep_counter import MovementStage, RepCounter
+from repvision.rep_counter import MovementStage, RepCounter, RepUpdate
 
 
 def test_movement_stage_values_are_overlay_friendly() -> None:
@@ -55,3 +55,7 @@ def test_angle_classification_uses_threshold_boundaries(
     angle: float | None, expected: MovementStage | None
 ) -> None:
     assert counter().classify(angle) is expected
+
+
+def test_new_counter_snapshot_is_unknown_and_empty() -> None:
+    assert counter().snapshot() == RepUpdate(0, MovementStage.UNKNOWN)
