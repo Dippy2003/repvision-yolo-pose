@@ -1,5 +1,6 @@
 import pytest
 
+from repvision.config import AppConfig
 from repvision.rep_counter import MovementStage, RepCounter, RepUpdate
 
 
@@ -35,6 +36,22 @@ def test_counter_rejects_invalid_configuration(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         counter(**overrides)
+
+
+def test_counter_uses_shared_application_configuration() -> None:
+    config = AppConfig(
+        up_angle_threshold=45.0,
+        down_angle_threshold=160.0,
+        confirmation_frames=4,
+        cooldown_seconds=0.75,
+    )
+
+    tracker = RepCounter.from_config(config)
+
+    assert tracker.up_threshold == 45.0
+    assert tracker.down_threshold == 160.0
+    assert tracker.confirmation_frames == 4
+    assert tracker.cooldown_seconds == 0.75
 
 
 @pytest.mark.parametrize(

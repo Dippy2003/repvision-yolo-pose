@@ -5,6 +5,8 @@ from enum import StrEnum
 from math import isfinite
 from time import monotonic
 
+from repvision.config import AppConfig
+
 
 class MovementStage(StrEnum):
     """Accepted position of the selected arm."""
@@ -50,6 +52,16 @@ class RepCounter:
         self._candidate: MovementStage | None = None
         self._candidate_frames = 0
         self._last_rep_time: float | None = None
+
+    @classmethod
+    def from_config(cls, config: AppConfig) -> "RepCounter":
+        """Build a counter from the shared application configuration."""
+        return cls(
+            up_threshold=config.up_angle_threshold,
+            down_threshold=config.down_angle_threshold,
+            confirmation_frames=config.confirmation_frames,
+            cooldown_seconds=config.cooldown_seconds,
+        )
 
     def snapshot(
         self, *, transition_accepted: bool = False, rep_completed: bool = False
