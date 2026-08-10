@@ -81,3 +81,8 @@ def test_cosine_is_clamped_for_floating_point_safety(
     value: float, expected: float
 ) -> None:
     assert _clamp_cosine(value) == expected
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_coordinates_return_no_angle(invalid: float) -> None:
+    assert calculate_elbow_angle((invalid, 0.0), (1.0, 0.0), (2.0, 0.0)) is None

@@ -1,7 +1,7 @@
 """Pure elbow-angle calculation and robust temporal smoothing."""
 
 from collections.abc import Sequence
-from math import acos, degrees, hypot
+from math import acos, degrees, hypot, isfinite
 
 Point2DLike = Sequence[float]
 
@@ -32,6 +32,18 @@ def calculate_elbow_angle(
     shoulder_x, shoulder_y = _coordinates(shoulder)
     elbow_x, elbow_y = _coordinates(elbow)
     wrist_x, wrist_y = _coordinates(wrist)
+    if not all(
+        isfinite(value)
+        for value in (
+            shoulder_x,
+            shoulder_y,
+            elbow_x,
+            elbow_y,
+            wrist_x,
+            wrist_y,
+        )
+    ):
+        return None
 
     upper_arm = (shoulder_x - elbow_x, shoulder_y - elbow_y)
     forearm = (wrist_x - elbow_x, wrist_y - elbow_y)
