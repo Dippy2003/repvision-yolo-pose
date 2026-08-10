@@ -1,7 +1,7 @@
 import pytest
 
 from repvision.config import AppConfig
-from repvision.rep_counter import MovementStage, RepCounter, RepUpdate
+from repvision.rep_counter import CurlUpdate, MovementStage, RepCounter, RepUpdate
 
 
 def test_movement_stage_values_are_overlay_friendly() -> None:
@@ -76,6 +76,16 @@ def test_angle_classification_uses_threshold_boundaries(
 
 def test_new_counter_snapshot_is_unknown_and_empty() -> None:
     assert counter().snapshot() == RepUpdate(0, MovementStage.UNKNOWN)
+
+
+def test_curl_update_keeps_measurement_and_counter_state_together() -> None:
+    update = CurlUpdate(160.0, 158.0, 2, MovementStage.DOWN)
+
+    assert update.raw_angle == 160.0
+    assert update.smoothed_angle == 158.0
+    assert update.count == 2
+    assert update.stage is MovementStage.DOWN
+    assert not update.rep_completed
 
 
 def test_endpoint_requires_configured_confirmation_frames() -> None:

@@ -26,6 +26,17 @@ class RepUpdate:
     rep_completed: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class CurlUpdate:
+    """Combined measurement, smoothing, and repetition result for one frame."""
+
+    raw_angle: float | None
+    smoothed_angle: float | None
+    count: int
+    stage: MovementStage
+    rep_completed: bool = False
+
+
 class RepCounter:
     """Count confirmed full-range down-to-up curl movements."""
 
