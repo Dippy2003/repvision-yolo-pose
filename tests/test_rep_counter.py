@@ -105,3 +105,28 @@ def test_repeated_frames_in_same_state_do_not_double_count() -> None:
     assert tracker.count == 1
     assert all(update.count == 1 for update in repeated_updates)
     assert all(not update.rep_completed for update in repeated_updates)
+
+
+def test_middle_range_jitter_does_not_change_stage() -> None:
+    tracker = counter(confirmation_frames=2)
+    tracker.update(160.0, timestamp=0.0)
+    tracker.update(160.0, timestamp=0.1)
+
+    for timestamp, angle in enumerate([120.0, 80.0, 130.0, 55.0], start=1):
+        update = tracker.update(angle, timestamp=float(timestamp))
+        assert update.stage is MovementStage.DOWN
+        assert update.count == 0
+        assert not update.transition_accepted
+
+
+def test_middle_angle_breaks_pending_confirmation_sequence() -> None:
+    tracker = counter(confirmation_frames=2)
+    tracker.update(160.0, timestamp=0.0)
+    tracker.update(160.0, timestamp=0.1)
+    tracker.update(45.0, timestamp=1.0)
+    tracker.update(90.0, timestamp=1.1)
+
+    still_down = tracker.update(45.0, timestamp=1.2)
+
+    assert still_down.stage is MovementStage.DOWN
+    assert still_down.count == 0
