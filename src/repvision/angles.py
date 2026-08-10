@@ -40,6 +40,10 @@ class AngleSmoother:
         assert smoothed is not None
         return smoothed
 
+    def reset(self) -> None:
+        """Clear all retained angle measurements."""
+        self._history.clear()
+
 
 def _coordinates(point: Point2DLike) -> tuple[float, float]:
     try:

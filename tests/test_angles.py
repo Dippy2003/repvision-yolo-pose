@@ -144,3 +144,14 @@ def test_smoother_rejects_out_of_range_angles(invalid: float) -> None:
         smoother.add(invalid)
 
     assert smoother.sample_count == 0
+
+
+def test_smoother_reset_clears_history() -> None:
+    smoother = AngleSmoother(window_size=3)
+    smoother.add(60.0)
+    smoother.add(70.0)
+
+    smoother.reset()
+
+    assert smoother.sample_count == 0
+    assert smoother.value is None
