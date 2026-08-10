@@ -55,3 +55,19 @@ def test_bent_arm_angle_matches_known_45_degree_geometry() -> None:
     )
 
     assert angle == pytest.approx(45.0)
+
+
+@pytest.mark.parametrize(
+    ("shoulder", "elbow", "wrist"),
+    [
+        ((1.0, 1.0), (1.0, 1.0), (2.0, 1.0)),
+        ((0.0, 1.0), (1.0, 1.0), (1.0, 1.0)),
+        ((1.0, 1.0), (1.0, 1.0), (1.0, 1.0)),
+    ],
+)
+def test_zero_length_limb_vectors_return_no_angle(
+    shoulder: tuple[float, float],
+    elbow: tuple[float, float],
+    wrist: tuple[float, float],
+) -> None:
+    assert calculate_elbow_angle(shoulder, elbow, wrist) is None
