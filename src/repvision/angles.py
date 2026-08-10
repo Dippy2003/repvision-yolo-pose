@@ -5,6 +5,8 @@ from collections.abc import Sequence
 from math import acos, degrees, hypot, isfinite
 from statistics import median
 
+from repvision.pose_detector import ArmLandmarks
+
 Point2DLike = Sequence[float]
 
 
@@ -95,3 +97,25 @@ def calculate_elbow_angle(
         upper_arm[0] * forearm[0] + upper_arm[1] * forearm[1]
     ) / (upper_length * forearm_length)
     return degrees(acos(_clamp_cosine(cosine)))
+
+
+def calculate_arm_angle(
+    landmarks: ArmLandmarks | None, confidence_threshold: float
+) -> float | None:
+    """Calculate an elbow angle only from reliable selected-arm landmarks."""
+    if landmarks is None or not landmarks.movement_points_reliable(
+        confidence_threshold
+    ):
+        return None
+    points = (landmarks.shoulder.point, landmarks.elbow.point, landmarks.wrist.point)
+    if any(point is None for point in points):
+        return None
+    shoulder, elbow, wrist = points
+    assert shoulder is not None
+    assert elbow is not None
+    assert wrist is not None
+    return calculate_elbow_angle(
+        (shoulder.x, shoulder.y),
+        (elbow.x, elbow.y),
+        (wrist.x, wrist.y),
+    )

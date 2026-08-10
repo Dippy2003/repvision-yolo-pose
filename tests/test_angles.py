@@ -7,8 +7,11 @@ from repvision.angles import (
     AngleSmoother,
     _clamp_cosine,
     _coordinates,
+    calculate_arm_angle,
     calculate_elbow_angle,
 )
+from repvision.config import Arm
+from repvision.pose_detector import ArmLandmarks, Landmark, Point2D
 
 
 @pytest.mark.parametrize(
@@ -155,3 +158,18 @@ def test_smoother_reset_clears_history() -> None:
 
     assert smoother.sample_count == 0
     assert smoother.value is None
+
+
+def test_selected_arm_angle_requires_reliable_movement_points() -> None:
+    shoulder = Landmark(Point2D(0.0, 1.0), 0.9)
+    elbow = Landmark(Point2D(0.0, 0.0), 0.9)
+    wrist = Landmark(Point2D(1.0, 0.0), 0.9)
+    hip = Landmark(Point2D(0.0, 2.0), 0.2)
+    reliable = ArmLandmarks(Arm.RIGHT, shoulder, elbow, wrist, hip)
+    low_wrist = ArmLandmarks(
+        Arm.RIGHT, shoulder, elbow, Landmark(wrist.point, 0.4), hip
+    )
+
+    assert calculate_arm_angle(reliable, 0.5) == pytest.approx(90.0)
+    assert calculate_arm_angle(low_wrist, 0.5) is None
+    assert calculate_arm_angle(None, 0.5) is None
