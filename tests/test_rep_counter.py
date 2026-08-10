@@ -35,3 +35,23 @@ def test_counter_rejects_invalid_configuration(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         counter(**overrides)
+
+
+@pytest.mark.parametrize(
+    ("angle", "expected"),
+    [
+        (180.0, MovementStage.DOWN),
+        (155.0, MovementStage.DOWN),
+        (154.9, None),
+        (90.0, None),
+        (50.1, None),
+        (50.0, MovementStage.UP),
+        (0.0, MovementStage.UP),
+        (None, None),
+        (float("nan"), None),
+    ],
+)
+def test_angle_classification_uses_threshold_boundaries(
+    angle: float | None, expected: MovementStage | None
+) -> None:
+    assert counter().classify(angle) is expected

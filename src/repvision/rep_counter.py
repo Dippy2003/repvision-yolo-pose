@@ -1,6 +1,7 @@
 """Confirmed-frame bicep-curl movement state and repetition counting."""
 
 from enum import StrEnum
+from math import isfinite
 
 
 class MovementStage(StrEnum):
@@ -34,3 +35,15 @@ class RepCounter:
         self.cooldown_seconds = cooldown_seconds
         self.count = 0
         self.stage = MovementStage.UNKNOWN
+
+    def classify(self, angle: float | None) -> MovementStage | None:
+        """Classify an angle only when it crosses a configured endpoint."""
+        if angle is None or not isfinite(angle):
+            return None
+        if not 0.0 <= angle <= 180.0:
+            raise ValueError("angle must be between 0 and 180 degrees")
+        if angle >= self.down_threshold:
+            return MovementStage.DOWN
+        if angle <= self.up_threshold:
+            return MovementStage.UP
+        return None
