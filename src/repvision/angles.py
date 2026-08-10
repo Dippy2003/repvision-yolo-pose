@@ -22,10 +22,19 @@ class AngleSmoother:
         """Return the number of valid angles currently retained."""
         return len(self._history)
 
+    @property
+    def value(self) -> float | None:
+        """Return the current median without adding a measurement."""
+        if not self._history:
+            return None
+        return float(median(self._history))
+
     def add(self, angle: float) -> float:
         """Add one angle and return the median of the retained window."""
         self._history.append(float(angle))
-        return float(median(self._history))
+        smoothed = self.value
+        assert smoothed is not None
+        return smoothed
 
 
 def _coordinates(point: Point2DLike) -> tuple[float, float]:
