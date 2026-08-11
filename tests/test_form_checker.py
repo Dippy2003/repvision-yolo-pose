@@ -144,3 +144,29 @@ def test_up_endpoint_keeps_good_movement_feedback() -> None:
     )
 
     assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
+
+
+def test_down_stage_prompts_complete_curl_in_middle_range() -> None:
+    checker = FormChecker(AppConfig())
+
+    feedback = checker.check(
+        PoseStatus.TRACKING,
+        arm_landmarks(),
+        smoothed_angle=100.0,
+        stage=MovementStage.DOWN,
+    )
+
+    assert feedback == FormFeedback(FeedbackMessage.COMPLETE_CURL)
+
+
+def test_down_endpoint_keeps_good_movement_feedback() -> None:
+    checker = FormChecker(AppConfig())
+
+    feedback = checker.check(
+        PoseStatus.TRACKING,
+        arm_landmarks(),
+        smoothed_angle=160.0,
+        stage=MovementStage.DOWN,
+    )
+
+    assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)

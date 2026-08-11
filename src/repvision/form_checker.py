@@ -91,4 +91,12 @@ class FormChecker:
             < self.config.down_angle_threshold
         ):
             return FormFeedback(FeedbackMessage.FULLY_EXTEND)
+        if (
+            stage is MovementStage.DOWN
+            and smoothed_angle is not None
+            and self.config.up_angle_threshold
+            < smoothed_angle
+            < self.config.down_angle_threshold
+        ):
+            return FormFeedback(FeedbackMessage.COMPLETE_CURL)
         return FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
