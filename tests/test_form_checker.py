@@ -1,6 +1,6 @@
 import pytest
 
-from repvision.config import Arm
+from repvision.config import AppConfig, Arm
 from repvision.form_checker import (
     FeedbackMessage,
     FormChecker,
