@@ -26,6 +26,7 @@ class RepUpdate:
     stage: MovementStage
     transition_accepted: bool = False
     rep_completed: bool = False
+    rep_duration_seconds: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +38,7 @@ class CurlUpdate:
     count: int
     stage: MovementStage
     rep_completed: bool = False
+    rep_duration_seconds: float | None = None
 
 
 class RepCounter:
@@ -65,6 +67,7 @@ class RepCounter:
         self._candidate: MovementStage | None = None
         self._candidate_frames = 0
         self._last_rep_time: float | None = None
+        self._down_started_at: float | None = None
 
     @classmethod
     def from_config(cls, config: AppConfig) -> "RepCounter":
@@ -77,10 +80,20 @@ class RepCounter:
         )
 
     def snapshot(
-        self, *, transition_accepted: bool = False, rep_completed: bool = False
+        self,
+        *,
+        transition_accepted: bool = False,
+        rep_completed: bool = False,
+        rep_duration_seconds: float | None = None,
     ) -> RepUpdate:
         """Return the current public counter state."""
-        return RepUpdate(self.count, self.stage, transition_accepted, rep_completed)
+        return RepUpdate(
+            self.count,
+            self.stage,
+            transition_accepted,
+            rep_completed,
+            rep_duration_seconds,
+        )
 
     def classify(self, angle: float | None) -> MovementStage | None:
         """Classify an angle only when it crosses a configured endpoint."""
@@ -122,9 +135,18 @@ class RepCounter:
         if rep_completed:
             self.count += 1
             self._last_rep_time = now
+        rep_duration = None
+        if rep_completed and self._down_started_at is not None:
+            rep_duration = max(0.0, now - self._down_started_at)
         self.stage = target
+        if target is MovementStage.DOWN:
+            self._down_started_at = now
         self._clear_candidate()
-        return self.snapshot(transition_accepted=True, rep_completed=rep_completed)
+        return self.snapshot(
+            transition_accepted=True,
+            rep_completed=rep_completed,
+            rep_duration_seconds=rep_duration,
+        )
 
     def _clear_candidate(self) -> None:
         self._candidate = None
@@ -135,6 +157,7 @@ class RepCounter:
         self.count = 0
         self.stage = MovementStage.UNKNOWN
         self._last_rep_time = None
+        self._down_started_at = None
         self._clear_candidate()
 
 
@@ -162,6 +185,7 @@ class CurlTracker:
             rep_update.count,
             rep_update.stage,
             rep_update.rep_completed,
+            rep_update.rep_duration_seconds,
         )
 
     def reset(self) -> None:

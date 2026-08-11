@@ -135,6 +135,7 @@ def test_confirmed_down_to_up_transition_counts_one_rep() -> None:
         stage=MovementStage.UP,
         transition_accepted=True,
         rep_completed=True,
+        rep_duration_seconds=1.0,
     )
 
 
@@ -317,3 +318,12 @@ def test_curl_tracker_reset_clears_smoothing_and_counter() -> None:
 
     assert tracker.smoother.value is None
     assert tracker.counter.snapshot() == RepUpdate(0, MovementStage.UNKNOWN)
+
+
+def test_counter_reports_confirmed_rep_duration() -> None:
+    tracker = counter(confirmation_frames=1)
+    tracker.update(160.0, timestamp=10.0)
+
+    completed = tracker.update(40.0, timestamp=11.25)
+
+    assert completed.rep_duration_seconds == pytest.approx(1.25)
