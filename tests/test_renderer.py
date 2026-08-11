@@ -1,6 +1,9 @@
 import pytest
 
-from repvision.renderer import curl_progress
+from repvision.config import Arm
+from repvision.form_checker import FeedbackMessage, FormFeedback
+from repvision.renderer import OverlayData, curl_progress
+from repvision.rep_counter import MovementStage
 
 
 @pytest.mark.parametrize(
@@ -23,3 +26,20 @@ def test_curl_progress_clamps_to_configured_range(
         assert progress is None
     else:
         assert progress == pytest.approx(expected)
+
+
+def test_overlay_data_keeps_workout_state_typed() -> None:
+    overlay = OverlayData(
+        arm=Arm.RIGHT,
+        repetitions=3,
+        angle=91.5,
+        stage=MovementStage.DOWN,
+        feedback=FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        progress=0.6,
+        fps=24.5,
+    )
+
+    assert overlay.arm is Arm.RIGHT
+    assert overlay.repetitions == 3
+    assert overlay.stage is MovementStage.DOWN
+    assert not overlay.paused
