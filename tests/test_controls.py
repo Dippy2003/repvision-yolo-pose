@@ -1,0 +1,13 @@
+import pytest
+
+from repvision.controls import KeyAction, decode_key
+
+
+@pytest.mark.parametrize("key_code", [ord("q"), ord("Q"), 0x100 + ord("q")])
+def test_decode_key_recognizes_quit(key_code: int) -> None:
+    assert decode_key(key_code) is KeyAction.QUIT
+
+
+@pytest.mark.parametrize("key_code", [-1, ord("x"), 255])
+def test_decode_key_ignores_unmapped_input(key_code: int) -> None:
+    assert decode_key(key_code) is KeyAction.NONE
