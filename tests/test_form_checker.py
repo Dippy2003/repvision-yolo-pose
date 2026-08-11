@@ -3,6 +3,7 @@ import pytest
 from repvision.config import Arm
 from repvision.form_checker import (
     FeedbackMessage,
+    FormChecker,
     FormFeedback,
     feedback_for_visibility,
     upper_arm_drift_angle,
@@ -75,3 +76,24 @@ def test_upper_arm_drift_compares_arm_with_torso_line() -> None:
 
     assert upper_arm_drift_angle(close, 0.5) == pytest.approx(0.0)
     assert upper_arm_drift_angle(diagonal, 0.5) == pytest.approx(45.0)
+
+
+def test_form_checker_warns_when_upper_arm_exceeds_drift_limit() -> None:
+    checker = FormChecker(AppConfig(upper_arm_drift_threshold=30.0))
+
+    feedback = checker.check(
+        PoseStatus.TRACKING,
+        arm_landmarks(elbow=(1.0, 1.0)),
+    )
+
+    assert feedback.message is FeedbackMessage.ELBOW_DRIFT
+    assert feedback.is_form_warning
+    assert not feedback.is_visibility_issue
+
+
+def test_form_checker_accepts_conservative_upper_arm_position() -> None:
+    checker = FormChecker(AppConfig(upper_arm_drift_threshold=30.0))
+
+    feedback = checker.check(PoseStatus.TRACKING, arm_landmarks(elbow=(0.2, 1.0)))
+
+    assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)

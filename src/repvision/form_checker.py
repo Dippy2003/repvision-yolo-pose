@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from repvision.angles import calculate_elbow_angle
+from repvision.config import AppConfig
 from repvision.pose_detector import ArmLandmarks, PoseStatus
 
 
@@ -53,3 +54,30 @@ def upper_arm_drift_angle(
         (shoulder.x, shoulder.y),
         (hip.x, hip.y),
     )
+
+
+class FormChecker:
+    """Choose one conservative feedback message for the current pose."""
+
+    def __init__(self, config: AppConfig) -> None:
+        self.config = config
+
+    def check(
+        self,
+        status: PoseStatus,
+        landmarks: ArmLandmarks | None,
+    ) -> FormFeedback:
+        """Evaluate visibility first, then the upper-arm drift heuristic."""
+        visibility = feedback_for_visibility(status)
+        if visibility is not None:
+            return visibility
+        if landmarks is not None:
+            drift = upper_arm_drift_angle(
+                landmarks, self.config.confidence_threshold
+            )
+            if drift is not None and drift > self.config.upper_arm_drift_threshold:
+                return FormFeedback(
+                    FeedbackMessage.ELBOW_DRIFT,
+                    is_form_warning=True,
+                )
+        return FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
