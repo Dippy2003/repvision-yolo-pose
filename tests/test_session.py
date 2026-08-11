@@ -88,3 +88,21 @@ def test_session_logger_creates_aggregate_csv(tmp_path) -> None:
     lines = saved_path.read_text(encoding="utf-8").splitlines()
     assert lines[0].split(",") == list(SESSION_HEADERS)
     assert lines[1] == "2026-08-11T12:00:00,bicep_curl,right,12.00,3,1,2.00"
+
+
+def test_session_logger_appends_without_repeating_header(tmp_path) -> None:
+    logger = SessionLogger(tmp_path)
+    first = SessionSummary(
+        datetime(2026, 8, 11, 12), "bicep_curl", Arm.RIGHT, 10.0, 2, 0, 1.0
+    )
+    second = SessionSummary(
+        datetime(2026, 8, 11, 13), "bicep_curl", Arm.LEFT, 20.0, 4, 1, 2.0
+    )
+
+    logger.save(first)
+    logger.save(second)
+
+    lines = logger.path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    assert lines.count(",".join(SESSION_HEADERS)) == 1
+    assert ",left,20.00,4,1,2.00" in lines[2]
