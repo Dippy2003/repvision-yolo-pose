@@ -63,7 +63,22 @@ class Renderer:
         self._draw_progress(canvas, data.progress, panel_width)
         if data.paused:
             self._draw_paused_banner(canvas)
+        self._draw_controls(canvas)
         return canvas
+
+    @staticmethod
+    def _draw_controls(canvas: Frame) -> None:
+        """Show the keyboard controls on every workout frame."""
+        cv2.putText(
+            canvas,
+            "Q Quit | R Reset | P Pause | L Switch arm",
+            (12, max(18, canvas.shape[0] - 12)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
 
     @staticmethod
     def _draw_paused_banner(canvas: Frame) -> None:

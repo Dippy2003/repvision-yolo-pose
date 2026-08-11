@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
@@ -147,3 +149,22 @@ def test_renderer_marks_paused_workout() -> None:
     rendered = Renderer().render(frame, overlay)
 
     assert np.any(rendered[165:235, 200:400] != 0)
+
+
+def test_renderer_displays_keyboard_help() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    overlay = OverlayData(
+        Arm.RIGHT,
+        0,
+        None,
+        MovementStage.UNKNOWN,
+        FormFeedback(FeedbackMessage.LOW_CONFIDENCE),
+        None,
+        0.0,
+    )
+
+    with patch("repvision.renderer.cv2.putText") as put_text:
+        Renderer().render(frame, overlay)
+
+    rendered_text = [call.args[1] for call in put_text.call_args_list]
+    assert "Q Quit | R Reset | P Pause | L Switch arm" in rendered_text
