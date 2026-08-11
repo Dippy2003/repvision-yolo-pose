@@ -1,8 +1,9 @@
+import numpy as np
 import pytest
 
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
-from repvision.renderer import OverlayData, curl_progress
+from repvision.renderer import OverlayData, Renderer, curl_progress
 from repvision.rep_counter import MovementStage
 
 
@@ -43,3 +44,23 @@ def test_overlay_data_keeps_workout_state_typed() -> None:
     assert overlay.repetitions == 3
     assert overlay.stage is MovementStage.DOWN
     assert not overlay.paused
+
+
+def test_renderer_adds_panel_without_mutating_source_frame() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    source = frame.copy()
+    overlay = OverlayData(
+        Arm.RIGHT,
+        0,
+        None,
+        MovementStage.UNKNOWN,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        None,
+        0.0,
+    )
+
+    rendered = Renderer().render(frame, overlay)
+
+    np.testing.assert_array_equal(frame, source)
+    assert rendered.shape == frame.shape
+    assert np.any(rendered != source)
