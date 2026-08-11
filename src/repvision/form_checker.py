@@ -100,3 +100,23 @@ class FormChecker:
         ):
             return FormFeedback(FeedbackMessage.COMPLETE_CURL)
         return FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
+
+
+class WarningCounter:
+    """Count distinct form-warning episodes instead of warning frames."""
+
+    def __init__(self) -> None:
+        self.count = 0
+        self._warning_active = False
+
+    def update(self, feedback: FormFeedback) -> int:
+        """Record a warning only when a new warning episode begins."""
+        if feedback.is_form_warning and not self._warning_active:
+            self.count += 1
+        self._warning_active = feedback.is_form_warning
+        return self.count
+
+    def reset(self) -> None:
+        """Clear aggregate and active warning state."""
+        self.count = 0
+        self._warning_active = False

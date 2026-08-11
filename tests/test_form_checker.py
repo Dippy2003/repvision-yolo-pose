@@ -5,6 +5,7 @@ from repvision.form_checker import (
     FeedbackMessage,
     FormChecker,
     FormFeedback,
+    WarningCounter,
     feedback_for_visibility,
     upper_arm_drift_angle,
 )
@@ -170,3 +171,25 @@ def test_down_endpoint_keeps_good_movement_feedback() -> None:
     )
 
     assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
+
+
+def test_warning_counter_counts_distinct_warning_episodes() -> None:
+    counter = WarningCounter()
+    warning = FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True)
+    good = FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
+
+    assert counter.update(warning) == 1
+    assert counter.update(warning) == 1
+    assert counter.update(good) == 1
+    assert counter.update(warning) == 2
+
+
+def test_warning_counter_reset_clears_episode_state() -> None:
+    counter = WarningCounter()
+    warning = FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True)
+    counter.update(warning)
+
+    counter.reset()
+
+    assert counter.count == 0
+    assert counter.update(warning) == 1
