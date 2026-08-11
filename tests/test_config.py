@@ -86,3 +86,9 @@ def test_performance_settings_reject_invalid_values(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         AppConfig(**{keyword: value})  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("threshold", [0.0, -1.0, 90.1])
+def test_arm_drift_threshold_stays_conservative(threshold: float) -> None:
+    with pytest.raises(ValueError, match="between 0 and 90"):
+        AppConfig(upper_arm_drift_threshold=threshold)

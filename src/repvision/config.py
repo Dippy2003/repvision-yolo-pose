@@ -46,5 +46,7 @@ class AppConfig:
             raise ValueError("smoothing_window must be positive")
         if self.cooldown_seconds < 0.0:
             raise ValueError("cooldown_seconds must not be negative")
+        if not 0.0 < self.upper_arm_drift_threshold <= 90.0:
+            raise ValueError("upper_arm_drift_threshold must be between 0 and 90")
         if self.input_size < 1:
             raise ValueError("input_size must be positive")
