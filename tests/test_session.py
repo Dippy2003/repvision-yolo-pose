@@ -3,7 +3,12 @@ from datetime import datetime
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
 from repvision.rep_counter import CurlUpdate, MovementStage
-from repvision.session import SESSION_HEADERS, SessionAccumulator, SessionSummary
+from repvision.session import (
+    SESSION_HEADERS,
+    SessionAccumulator,
+    SessionLogger,
+    SessionSummary,
+)
 
 
 def test_session_summary_formats_stable_aggregate_row() -> None:
@@ -70,3 +75,16 @@ def test_session_accumulator_reset_starts_fresh_statistics() -> None:
     assert summary.repetitions == 0
     assert summary.warning_count == 0
     assert summary.average_rep_duration_seconds is None
+
+
+def test_session_logger_creates_aggregate_csv(tmp_path) -> None:
+    summary = SessionSummary(
+        datetime(2026, 8, 11, 12), "bicep_curl", Arm.RIGHT, 12.0, 3, 1, 2.0
+    )
+
+    saved_path = SessionLogger(tmp_path / "outputs").save(summary)
+
+    assert saved_path == tmp_path / "outputs" / "sessions.csv"
+    lines = saved_path.read_text(encoding="utf-8").splitlines()
+    assert lines[0].split(",") == list(SESSION_HEADERS)
+    assert lines[1] == "2026-08-11T12:00:00,bicep_curl,right,12.00,3,1,2.00"
