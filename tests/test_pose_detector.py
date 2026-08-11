@@ -201,6 +201,25 @@ def test_detector_tracks_configured_arm_on_largest_person() -> None:
     assert observation.selected_arm.hip.point == Point2D(112.0, 212.0)
 
 
+def test_detector_can_override_configured_arm_for_live_switching() -> None:
+    keypoints = np.zeros((1, 17, 3), dtype=np.float64)
+    keypoints[0, :, 2] = 0.9
+    result = synthetic_result(
+        np.asarray([[0.0, 0.0, 20.0, 30.0]]),
+        np.asarray([0.9]),
+        keypoints,
+    )
+    detector = PoseDetector(
+        AppConfig(selected_arm=Arm.RIGHT),
+        model_factory=lambda _name: RecordingModel([result]),
+    )
+
+    observation = detector.detect(np.zeros((20, 20, 3), dtype=np.uint8), Arm.LEFT)
+
+    assert observation.selected_arm is not None
+    assert observation.selected_arm.arm is Arm.LEFT
+
+
 def test_tensor_output_is_moved_to_cpu_and_converted_to_float_array() -> None:
     tensor = TensorLike([[1.0, 2.0], [3.0, 4.0]])
 
