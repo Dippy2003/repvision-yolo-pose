@@ -9,6 +9,7 @@ from repvision.form_checker import (
     upper_arm_drift_angle,
 )
 from repvision.pose_detector import ArmLandmarks, Landmark, Point2D, PoseStatus
+from repvision.rep_counter import MovementStage
 
 
 def test_feedback_messages_match_interface_copy() -> None:
@@ -117,3 +118,29 @@ def test_visibility_feedback_takes_priority_over_drift(
     assert feedback.message is expected
     assert feedback.is_visibility_issue
     assert not feedback.is_form_warning
+
+
+def test_up_stage_prompts_full_extension_in_middle_range() -> None:
+    checker = FormChecker(AppConfig())
+
+    feedback = checker.check(
+        PoseStatus.TRACKING,
+        arm_landmarks(),
+        smoothed_angle=100.0,
+        stage=MovementStage.UP,
+    )
+
+    assert feedback == FormFeedback(FeedbackMessage.FULLY_EXTEND)
+
+
+def test_up_endpoint_keeps_good_movement_feedback() -> None:
+    checker = FormChecker(AppConfig())
+
+    feedback = checker.check(
+        PoseStatus.TRACKING,
+        arm_landmarks(),
+        smoothed_angle=40.0,
+        stage=MovementStage.UP,
+    )
+
+    assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)

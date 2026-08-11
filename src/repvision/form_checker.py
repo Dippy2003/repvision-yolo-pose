@@ -6,6 +6,7 @@ from enum import StrEnum
 from repvision.angles import calculate_elbow_angle
 from repvision.config import AppConfig
 from repvision.pose_detector import ArmLandmarks, PoseStatus
+from repvision.rep_counter import MovementStage
 
 
 class FeedbackMessage(StrEnum):
@@ -66,6 +67,8 @@ class FormChecker:
         self,
         status: PoseStatus,
         landmarks: ArmLandmarks | None,
+        smoothed_angle: float | None = None,
+        stage: MovementStage = MovementStage.UNKNOWN,
     ) -> FormFeedback:
         """Evaluate visibility first, then the upper-arm drift heuristic."""
         visibility = feedback_for_visibility(status)
@@ -80,4 +83,12 @@ class FormChecker:
                     FeedbackMessage.ELBOW_DRIFT,
                     is_form_warning=True,
                 )
+        if (
+            stage is MovementStage.UP
+            and smoothed_angle is not None
+            and self.config.up_angle_threshold
+            < smoothed_angle
+            < self.config.down_angle_threshold
+        ):
+            return FormFeedback(FeedbackMessage.FULLY_EXTEND)
         return FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
