@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from repvision.config import Arm
-from repvision.session import SESSION_HEADERS, SessionSummary
+from repvision.form_checker import FeedbackMessage, FormFeedback
+from repvision.rep_counter import CurlUpdate, MovementStage
+from repvision.session import SESSION_HEADERS, SessionAccumulator, SessionSummary
 
 
 def test_session_summary_formats_stable_aggregate_row() -> None:
@@ -33,3 +35,21 @@ def test_session_summary_leaves_unavailable_rep_average_empty() -> None:
     )
 
     assert summary.as_csv_row()[-1] == ""
+
+
+def test_session_accumulator_tracks_reps_warnings_and_average_duration() -> None:
+    accumulator = SessionAccumulator(datetime(2026, 8, 11, 10), 100.0)
+    warning = FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True)
+    accumulator.record(
+        CurlUpdate(None, 40.0, 1, MovementStage.UP, True, 1.5), warning
+    )
+    accumulator.record(
+        CurlUpdate(None, 160.0, 2, MovementStage.DOWN, True, 2.5), warning
+    )
+
+    summary = accumulator.summary(Arm.RIGHT, 110.0)
+
+    assert summary.duration_seconds == 10.0
+    assert summary.repetitions == 2
+    assert summary.warning_count == 1
+    assert summary.average_rep_duration_seconds == 2.0

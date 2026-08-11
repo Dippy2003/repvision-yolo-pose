@@ -2,8 +2,11 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from statistics import fmean
 
 from repvision.config import Arm
+from repvision.form_checker import FormFeedback, WarningCounter
+from repvision.rep_counter import CurlUpdate
 
 
 SESSION_HEADERS = (
@@ -40,4 +43,35 @@ class SessionSummary:
             str(self.repetitions),
             str(self.warning_count),
             "" if average is None else f"{average:.2f}",
+        )
+
+
+class SessionAccumulator:
+    """Collect aggregate-only statistics while frames remain in memory."""
+
+    def __init__(self, started_at: datetime, started_monotonic: float) -> None:
+        self.started_at = started_at
+        self.started_monotonic = started_monotonic
+        self.repetitions = 0
+        self.warning_counter = WarningCounter()
+        self._rep_durations: list[float] = []
+
+    def record(self, update: CurlUpdate, feedback: FormFeedback) -> None:
+        """Consume one processed frame without retaining image data."""
+        self.repetitions = update.count
+        self.warning_counter.update(feedback)
+        if update.rep_completed and update.rep_duration_seconds is not None:
+            self._rep_durations.append(update.rep_duration_seconds)
+
+    def summary(self, arm: Arm, ended_monotonic: float) -> SessionSummary:
+        """Build a bicep-curl summary at a supplied monotonic end time."""
+        average = fmean(self._rep_durations) if self._rep_durations else None
+        return SessionSummary(
+            self.started_at,
+            "bicep_curl",
+            arm,
+            max(0.0, ended_monotonic - self.started_monotonic),
+            self.repetitions,
+            self.warning_counter.count,
+            average,
         )
