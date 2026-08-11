@@ -3,15 +3,15 @@
 RepVision is a local desktop Python project for real-time bicep-curl counting
 and basic form feedback using Ultralytics YOLO Pose and OpenCV.
 
-Development is in progress. The current foundation provides validated runtime
-configuration, safe OpenCV camera access, YOLO pose inference, deterministic
-primary-person selection, selected-arm keypoint extraction, elbow-angle
-calculation, median smoothing, and a confirmed-frame repetition state machine.
+It provides validated runtime configuration, safe OpenCV camera access, YOLO
+pose inference, deterministic primary-person selection, selected-arm keypoint
+extraction, elbow-angle smoothing, confirmed repetition counting, conservative
+form feedback, a live overlay, keyboard controls, and aggregate session logs.
 
 ## Requirements
 
 - Python 3.11 or another version supported by the declared dependencies
-- A webcam for the optional camera diagnostic
+- A webcam for live workouts and camera diagnostics
 
 ## Installation
 
@@ -30,11 +30,20 @@ the first time a real pose check is run.
 
 ## Commands
 
-Validate configuration without opening a webcam:
+Start a live workout (press `Q` to finish):
 
 ```console
 repvision
 ```
+
+The camera window shows the selected arm, repetition count, smoothed elbow
+angle, movement stage, feedback, curl progress, and frame rate. Its controls
+are:
+
+- `Q`: finish the workout and close the window
+- `R`: reset the current counter and aggregate statistics
+- `P`: pause or resume camera inference
+- `L`: switch between left-arm and right-arm tracking
 
 Open the configured camera, read exactly one frame, release it, and exit:
 
@@ -50,10 +59,16 @@ repetition count, then exit:
 repvision --check-pose
 ```
 
-Select a different camera, arm, or future model:
+Select a different camera, arm, confidence, input size, or model:
 
 ```console
 repvision --check-pose --camera-index 1 --arm left --confidence 0.6 --input-size 480 --model yolo26n-pose.pt
+```
+
+Choose a different aggregate-log directory for a live workout:
+
+```console
+repvision --output-directory my-sessions
 ```
 
 Run the quality checks:
@@ -97,17 +112,30 @@ transition. Middle-range jitter, repeated frames, partial movement, missing or
 low-confidence points, and movements inside the cooldown do not add reps.
 
 The one-frame pose diagnostic can verify angle extraction but cannot complete
-a repetition. Continuous live tracking and its controls are not implemented
-yet; the repetition behavior is currently verified by deterministic tests.
+a repetition. Use `repvision` for continuous tracking and perform a full
+extension followed by a full curl to exercise the repetition state machine.
+
+## Feedback and session data
+
+Visibility feedback asks the user to move back or reports low keypoint
+confidence. Movement prompts encourage full extension and curl completion. A
+conservative shoulder-elbow-hip angle heuristic can warn about upper-arm drift;
+this warning never rejects an otherwise valid repetition.
+
+When a workout ends, RepVision appends one row to `outputs/sessions.csv` by
+default. The row contains only the start datetime, exercise, selected arm,
+duration, repetitions, warning count, and average reliable repetition duration.
 
 ## Privacy
 
-RepVision is designed to process webcam frames locally. Neither diagnostic
-uploads, records, nor saves its frame. Model files and generated image, video,
-and CSV artifacts are excluded from Git.
+RepVision processes webcam frames locally. Neither a diagnostic nor a live
+workout uploads, records, or saves frames or video. Only aggregate session
+values are written. Model files and generated image, video, and CSV artifacts
+are excluded from Git.
 
 ## Current limitations
 
-The live processing loop, visual interface, keyboard controls, form feedback,
-and session CSV logging remain to be implemented. A single 2D pose can also be
-affected by occlusion, camera placement, and depth ambiguity.
+The tracker supports one selected arm and the largest detected person. Its 2D
+angle and form heuristic can be affected by occlusion, camera placement, loose
+clothing, and depth ambiguity. Form feedback is guidance, not a medical or
+biomechanical assessment.
