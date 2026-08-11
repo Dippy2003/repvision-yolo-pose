@@ -129,3 +129,21 @@ def test_renderer_draws_selected_arm_landmarks() -> None:
 
     assert tuple(rendered[100, 430]) == (40, 255, 100)
     assert np.any(rendered[45:95, 415:435] != 0)
+
+
+def test_renderer_marks_paused_workout() -> None:
+    frame = np.zeros((400, 600, 3), dtype=np.uint8)
+    overlay = OverlayData(
+        Arm.RIGHT,
+        2,
+        80.0,
+        MovementStage.UP,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        0.7,
+        20.0,
+        paused=True,
+    )
+
+    rendered = Renderer().render(frame, overlay)
+
+    assert np.any(rendered[165:235, 200:400] != 0)

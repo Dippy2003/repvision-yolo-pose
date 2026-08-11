@@ -61,7 +61,32 @@ class Renderer:
                 cv2.LINE_AA,
             )
         self._draw_progress(canvas, data.progress, panel_width)
+        if data.paused:
+            self._draw_paused_banner(canvas)
         return canvas
+
+    @staticmethod
+    def _draw_paused_banner(canvas: Frame) -> None:
+        """Make paused state unmistakable without obscuring the workout panel."""
+        center_x = canvas.shape[1] // 2
+        center_y = canvas.shape[0] // 2
+        cv2.rectangle(
+            canvas,
+            (center_x - 100, center_y - 35),
+            (center_x + 100, center_y + 35),
+            (20, 20, 20),
+            -1,
+        )
+        cv2.putText(
+            canvas,
+            "PAUSED",
+            (center_x - 73, center_y + 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            (0, 220, 255),
+            2,
+            cv2.LINE_AA,
+        )
 
     @staticmethod
     def _draw_arm(canvas: Frame, landmarks: ArmLandmarks | None) -> None:
