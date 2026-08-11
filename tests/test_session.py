@@ -53,3 +53,20 @@ def test_session_accumulator_tracks_reps_warnings_and_average_duration() -> None
     assert summary.repetitions == 2
     assert summary.warning_count == 1
     assert summary.average_rep_duration_seconds == 2.0
+
+
+def test_session_accumulator_reset_starts_fresh_statistics() -> None:
+    accumulator = SessionAccumulator(datetime(2026, 8, 11, 10), 100.0)
+    accumulator.record(
+        CurlUpdate(None, 40.0, 1, MovementStage.UP, True, 1.5),
+        FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True),
+    )
+
+    accumulator.reset(datetime(2026, 8, 11, 11), 200.0)
+    summary = accumulator.summary(Arm.LEFT, 205.0)
+
+    assert summary.started_at == datetime(2026, 8, 11, 11)
+    assert summary.duration_seconds == 5.0
+    assert summary.repetitions == 0
+    assert summary.warning_count == 0
+    assert summary.average_rep_duration_seconds is None

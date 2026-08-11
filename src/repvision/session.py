@@ -8,7 +8,6 @@ from repvision.config import Arm
 from repvision.form_checker import FormFeedback, WarningCounter
 from repvision.rep_counter import CurlUpdate
 
-
 SESSION_HEADERS = (
     "datetime",
     "exercise",
@@ -75,3 +74,11 @@ class SessionAccumulator:
             self.warning_counter.count,
             average,
         )
+
+    def reset(self, started_at: datetime, started_monotonic: float) -> None:
+        """Begin fresh aggregate statistics after an explicit workout reset."""
+        self.started_at = started_at
+        self.started_monotonic = started_monotonic
+        self.repetitions = 0
+        self.warning_counter.reset()
+        self._rep_durations.clear()
