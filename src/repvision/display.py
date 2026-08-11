@@ -21,7 +21,8 @@ class OpenCVDisplay:
         try:
             cv2.imshow(self.window_name, frame)
         except cv2.error as error:
-            raise DisplayError(f"Could not display the workout window: {error}") from error
+            message = f"Could not display the workout window: {error}"
+            raise DisplayError(message) from error
 
     def read_action(self, delay_ms: int = 1) -> KeyAction:
         """Wait briefly for a key and return its application action."""
