@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -20,6 +21,8 @@ def test_cli_overrides_foundation_settings() -> None:
             "0.65",
             "--input-size",
             "480",
+            "--output-directory",
+            "my-sessions",
         ]
     )
 
@@ -30,6 +33,7 @@ def test_cli_overrides_foundation_settings() -> None:
     assert config.selected_arm is Arm.LEFT
     assert config.confidence_threshold == 0.65
     assert config.input_size == 480
+    assert config.output_directory == Path("my-sessions")
 
 
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:

@@ -2,6 +2,7 @@
 
 import argparse
 from collections.abc import Sequence
+from pathlib import Path
 
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
@@ -39,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=defaults.input_size,
         help="square model inference size in pixels",
     )
+    parser.add_argument(
+        "--output-directory",
+        type=Path,
+        default=defaults.output_directory,
+        help="directory for aggregate session CSV data",
+    )
     diagnostics = parser.add_mutually_exclusive_group()
     diagnostics.add_argument(
         "--check-camera",
@@ -61,6 +68,7 @@ def config_from_args(args: argparse.Namespace) -> AppConfig:
         selected_arm=args.arm,
         confidence_threshold=args.confidence,
         input_size=args.input_size,
+        output_directory=args.output_directory,
     )
 
 
