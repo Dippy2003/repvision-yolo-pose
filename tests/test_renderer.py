@@ -85,3 +85,21 @@ def test_renderer_adds_panel_without_mutating_source_frame() -> None:
     np.testing.assert_array_equal(frame, source)
     assert rendered.shape == frame.shape
     assert np.any(rendered != source)
+
+
+def test_renderer_draws_progress_fill() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    overlay = OverlayData(
+        Arm.RIGHT,
+        1,
+        100.0,
+        MovementStage.DOWN,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        0.5,
+        30.0,
+    )
+
+    rendered = Renderer().render(frame, overlay)
+
+    assert tuple(rendered[230, 100]) == (80, 210, 120)
+    assert tuple(rendered[230, 350]) != (80, 210, 120)

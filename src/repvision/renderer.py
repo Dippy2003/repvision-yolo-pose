@@ -53,7 +53,18 @@ class Renderer:
                 1,
                 cv2.LINE_AA,
             )
+        self._draw_progress(canvas, data.progress, panel_width)
         return canvas
+
+    @staticmethod
+    def _draw_progress(canvas: Frame, progress: float | None, width: int) -> None:
+        """Draw a clamped curl progress bar when an angle is available."""
+        left, right, top, bottom = 16, max(17, width - 16), 225, 237
+        cv2.rectangle(canvas, (left, top), (right, bottom), (90, 90, 90), 1)
+        if progress is None:
+            return
+        fill = left + round((right - left) * max(0.0, min(1.0, progress)))
+        cv2.rectangle(canvas, (left, top), (fill, bottom), (80, 210, 120), -1)
 
 
 def overlay_lines(data: OverlayData) -> tuple[str, ...]:
