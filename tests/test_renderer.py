@@ -3,6 +3,7 @@ import pytest
 
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
+from repvision.pose_detector import ArmLandmarks, Landmark, Point2D
 from repvision.renderer import OverlayData, Renderer, curl_progress, overlay_lines
 from repvision.rep_counter import MovementStage
 
@@ -103,3 +104,28 @@ def test_renderer_draws_progress_fill() -> None:
 
     assert tuple(rendered[230, 100]) == (80, 210, 120)
     assert tuple(rendered[230, 350]) != (80, 210, 120)
+
+
+def test_renderer_draws_selected_arm_landmarks() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    overlay = OverlayData(
+        Arm.RIGHT,
+        0,
+        90.0,
+        MovementStage.UNKNOWN,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        0.5,
+        0.0,
+    )
+    landmarks = ArmLandmarks(
+        Arm.RIGHT,
+        Landmark(Point2D(420, 40), 0.9),
+        Landmark(Point2D(430, 100), 0.9),
+        Landmark(Point2D(450, 160), 0.9),
+        Landmark(Point2D(410, 220), 0.9),
+    )
+
+    rendered = Renderer().render(frame, overlay, landmarks)
+
+    assert tuple(rendered[100, 430]) == (40, 255, 100)
+    assert np.any(rendered[45:95, 415:435] != 0)
