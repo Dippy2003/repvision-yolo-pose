@@ -24,4 +24,6 @@ def decode_key(key_code: int) -> KeyAction:
         return KeyAction.RESET
     if key in (ord("p"), ord("P")):
         return KeyAction.TOGGLE_PAUSE
+    if key in (ord("l"), ord("L")):
+        return KeyAction.SWITCH_ARM
     return KeyAction.NONE
