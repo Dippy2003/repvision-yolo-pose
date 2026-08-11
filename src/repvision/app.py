@@ -5,8 +5,11 @@ from collections.abc import Sequence
 
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
+from repvision.display import DisplayError
 from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
 from repvision.rep_counter import CurlTracker
+from repvision.session import SessionLogError
+from repvision.workout import run_workout
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,7 +78,7 @@ def check_pose(config: AppConfig) -> PoseObservation:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Validate startup settings without starting future processing stages."""
+    """Run a diagnostic or start the continuous local workout."""
     parser = build_parser()
     args = parser.parse_args(argv)
     config = config_from_args(args)
@@ -104,11 +107,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"stage={curl_update.stage.value}, reps={curl_update.count})."
         )
         return 0
-    print(
-        "RepVision pose pipeline is configured "
-        f"(camera={config.camera_index}, arm={config.selected_arm.value}, "
-        f"model={config.model_name})."
-    )
+    try:
+        session_path = run_workout(config)
+    except (CameraError, DisplayError, PoseDetectorError, SessionLogError) as error:
+        parser.error(str(error))
+    print(f"Workout complete. Aggregate session saved to {session_path}.")
     return 0
 
 

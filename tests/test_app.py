@@ -32,8 +32,11 @@ def test_cli_overrides_foundation_settings() -> None:
     assert config.input_size == 480
 
 
-def test_main_is_a_non_interactive_smoke_check() -> None:
-    assert main([]) == 0
+def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
+    with patch("repvision.app.run_workout", return_value="outputs/sessions.csv"):
+        assert main([]) == 0
+
+    assert "Aggregate session saved" in capsys.readouterr().out
 
 
 def test_camera_check_reports_single_frame_shape(
