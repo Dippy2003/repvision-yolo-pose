@@ -3,7 +3,7 @@ import pytest
 
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
-from repvision.renderer import OverlayData, Renderer, curl_progress
+from repvision.renderer import OverlayData, Renderer, curl_progress, overlay_lines
 from repvision.rep_counter import MovementStage
 
 
@@ -44,6 +44,27 @@ def test_overlay_data_keeps_workout_state_typed() -> None:
     assert overlay.repetitions == 3
     assert overlay.stage is MovementStage.DOWN
     assert not overlay.paused
+
+
+def test_overlay_lines_format_all_workout_measurements() -> None:
+    overlay = OverlayData(
+        Arm.LEFT,
+        3,
+        91.5,
+        MovementStage.DOWN,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        0.6,
+        24.52,
+    )
+
+    assert overlay_lines(overlay) == (
+        "Arm: LEFT",
+        "Reps: 3",
+        "Angle: 91.5 deg",
+        "Stage: DOWN",
+        "FPS: 24.5",
+        "Feedback: Good movement",
+    )
 
 
 def test_renderer_adds_panel_without_mutating_source_frame() -> None:

@@ -28,7 +28,7 @@ class Renderer:
     """Render an uncluttered workout HUD without mutating the source frame."""
 
     def render(self, frame: Frame, data: OverlayData) -> Frame:
-        """Return a frame with the RepVision title panel."""
+        """Return a frame with the current workout measurements."""
         canvas = frame.copy()
         panel_width = min(390, canvas.shape[1])
         cv2.rectangle(canvas, (0, 0), (panel_width, 245), (20, 20, 20), -1)
@@ -42,7 +42,31 @@ class Renderer:
             2,
             cv2.LINE_AA,
         )
+        for index, line in enumerate(overlay_lines(data)):
+            cv2.putText(
+                canvas,
+                line,
+                (16, 60 + index * 27),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.55,
+                (235, 235, 235),
+                1,
+                cv2.LINE_AA,
+            )
         return canvas
+
+
+def overlay_lines(data: OverlayData) -> tuple[str, ...]:
+    """Format stable, testable text for a workout overlay."""
+    angle = "--" if data.angle is None else f"{data.angle:.1f} deg"
+    return (
+        f"Arm: {data.arm.value.upper()}",
+        f"Reps: {data.repetitions}",
+        f"Angle: {angle}",
+        f"Stage: {data.stage.value.upper()}",
+        f"FPS: {data.fps:.1f}",
+        f"Feedback: {data.feedback.message.value}",
+    )
 
 
 def curl_progress(
