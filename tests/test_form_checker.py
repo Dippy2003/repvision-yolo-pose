@@ -97,3 +97,23 @@ def test_form_checker_accepts_conservative_upper_arm_position() -> None:
     feedback = checker.check(PoseStatus.TRACKING, arm_landmarks(elbow=(0.2, 1.0)))
 
     assert feedback == FormFeedback(FeedbackMessage.GOOD_MOVEMENT)
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        (PoseStatus.NO_PERSON, FeedbackMessage.MOVE_BACK),
+        (PoseStatus.MISSING_KEYPOINTS, FeedbackMessage.MOVE_BACK),
+        (PoseStatus.LOW_CONFIDENCE, FeedbackMessage.LOW_CONFIDENCE),
+    ],
+)
+def test_visibility_feedback_takes_priority_over_drift(
+    status: PoseStatus, expected: FeedbackMessage
+) -> None:
+    checker = FormChecker(AppConfig(upper_arm_drift_threshold=30.0))
+
+    feedback = checker.check(status, arm_landmarks(elbow=(2.0, 1.0)))
+
+    assert feedback.message is expected
+    assert feedback.is_visibility_issue
+    assert not feedback.is_form_warning
