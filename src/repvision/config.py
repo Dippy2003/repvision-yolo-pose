@@ -25,6 +25,7 @@ class AppConfig:
     confirmation_frames: int = 3
     smoothing_window: int = 5
     cooldown_seconds: float = 0.3
+    upper_arm_drift_threshold: float = 30.0
     input_size: int = 640
     output_directory: Path = Path("outputs")
 

@@ -22,6 +22,7 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.confirmation_frames == 3
     assert config.smoothing_window == 5
     assert config.cooldown_seconds == 0.3
+    assert config.upper_arm_drift_threshold == 30.0
     assert config.input_size == 640
     assert config.output_directory == Path("outputs")
 
