@@ -1,12 +1,20 @@
 """State and orchestration for a live local workout."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from time import monotonic
 
+from repvision.camera import Camera, Frame
 from repvision.config import AppConfig, Arm
+from repvision.controls import KeyAction
+from repvision.display import OpenCVDisplay
 from repvision.form_checker import FormChecker, FormFeedback
-from repvision.pose_detector import PoseObservation
-from repvision.renderer import OverlayData, curl_progress
-from repvision.rep_counter import CurlTracker, CurlUpdate
+from repvision.pose_detector import PoseDetector, PoseObservation
+from repvision.renderer import OverlayData, Renderer, curl_progress
+from repvision.rep_counter import CurlTracker, CurlUpdate, MovementStage
+from repvision.session import SessionAccumulator, SessionLogger
 from repvision.timing import FpsMeter
 
 
@@ -73,7 +81,8 @@ class WorkoutEngine:
             self.config.up_angle_threshold,
             self.config.down_angle_threshold,
         )
-        return FrameAnalysis(update, feedback, progress, self.fps_meter.update(timestamp))
+        fps = self.fps_meter.update(timestamp)
+        return FrameAnalysis(update, feedback, progress, fps)
 
     def reset_measurements(self) -> None:
         """Clear tracking and timing measurements while preserving controls."""
@@ -84,3 +93,77 @@ class WorkoutEngine:
         """Switch the arm and clear measurements that cannot span arms."""
         self.state.switch_arm()
         self.reset_measurements()
+
+
+def _cleared_analysis(previous: FrameAnalysis) -> FrameAnalysis:
+    return FrameAnalysis(
+        CurlUpdate(None, None, 0, MovementStage.UNKNOWN),
+        previous.feedback,
+        None,
+        0.0,
+    )
+
+
+def run_workout(
+    config: AppConfig,
+    *,
+    camera_factory: Callable[[int], Camera] = Camera,
+    detector_factory: Callable[[AppConfig], PoseDetector] = PoseDetector,
+    display_factory: Callable[[], OpenCVDisplay] = OpenCVDisplay,
+    renderer_factory: Callable[[], Renderer] = Renderer,
+    clock: Callable[[], float] = monotonic,
+    wall_clock: Callable[[], datetime] = datetime.now,
+) -> Path:
+    """Run the local camera loop until Q and save one aggregate summary."""
+    detector = detector_factory(config)
+    display = display_factory()
+    renderer = renderer_factory()
+    engine = WorkoutEngine(config)
+    started_at = wall_clock()
+    started_monotonic = clock()
+    accumulator = SessionAccumulator(started_at, started_monotonic)
+    latest_frame: Frame | None = None
+    latest_observation: PoseObservation | None = None
+    latest_analysis: FrameAnalysis | None = None
+
+    try:
+        with camera_factory(config.camera_index) as camera:
+            while True:
+                if not engine.state.paused:
+                    latest_frame = camera.read()
+                    latest_observation = detector.detect(latest_frame, engine.state.arm)
+                    latest_analysis = engine.process(latest_observation, clock())
+                    accumulator.record(
+                        latest_analysis.update,
+                        latest_analysis.feedback,
+                    )
+                assert latest_frame is not None
+                assert latest_observation is not None
+                assert latest_analysis is not None
+                landmarks = latest_observation.selected_arm
+                if landmarks is not None and landmarks.arm is not engine.state.arm:
+                    landmarks = None
+                rendered = renderer.render(
+                    latest_frame,
+                    latest_analysis.overlay(engine.state),
+                    landmarks,
+                )
+                display.show(rendered)
+                action = display.read_action()
+                if action is KeyAction.QUIT:
+                    break
+                if action is KeyAction.TOGGLE_PAUSE:
+                    engine.state.toggle_pause()
+                elif action is KeyAction.RESET:
+                    engine.reset_measurements()
+                    accumulator.reset(wall_clock(), clock())
+                    latest_analysis = _cleared_analysis(latest_analysis)
+                elif action is KeyAction.SWITCH_ARM:
+                    engine.switch_arm()
+                    accumulator.reset(wall_clock(), clock())
+                    latest_analysis = _cleared_analysis(latest_analysis)
+    finally:
+        display.close()
+
+    summary = accumulator.summary(engine.state.arm, clock())
+    return SessionLogger(config.output_directory).save(summary)
