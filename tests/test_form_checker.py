@@ -1,11 +1,13 @@
 import pytest
 
+from repvision.config import Arm
 from repvision.form_checker import (
     FeedbackMessage,
     FormFeedback,
     feedback_for_visibility,
+    upper_arm_drift_angle,
 )
-from repvision.pose_detector import PoseStatus
+from repvision.pose_detector import ArmLandmarks, Landmark, Point2D, PoseStatus
 
 
 def test_feedback_messages_match_interface_copy() -> None:
@@ -45,3 +47,31 @@ def test_visibility_status_produces_priority_feedback(
 
 def test_tracking_status_allows_form_evaluation() -> None:
     assert feedback_for_visibility(PoseStatus.TRACKING) is None
+
+
+def arm_landmarks(
+    *,
+    shoulder: tuple[float, float] = (0.0, 0.0),
+    elbow: tuple[float, float] = (0.0, 1.0),
+    wrist: tuple[float, float] = (0.0, 2.0),
+    hip: tuple[float, float] = (0.0, 2.0),
+    confidence: float = 0.9,
+) -> ArmLandmarks:
+    def landmark(point: tuple[float, float]) -> Landmark:
+        return Landmark(Point2D(*point), confidence)
+
+    return ArmLandmarks(
+        Arm.RIGHT,
+        landmark(shoulder),
+        landmark(elbow),
+        landmark(wrist),
+        landmark(hip),
+    )
+
+
+def test_upper_arm_drift_compares_arm_with_torso_line() -> None:
+    close = arm_landmarks(elbow=(0.0, 1.0))
+    diagonal = arm_landmarks(elbow=(1.0, 1.0))
+
+    assert upper_arm_drift_angle(close, 0.5) == pytest.approx(0.0)
+    assert upper_arm_drift_angle(diagonal, 0.5) == pytest.approx(45.0)

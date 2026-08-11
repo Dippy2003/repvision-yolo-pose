@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from repvision.pose_detector import PoseStatus
+from repvision.angles import calculate_elbow_angle
+from repvision.pose_detector import ArmLandmarks, PoseStatus
 
 
 class FeedbackMessage(StrEnum):
@@ -33,3 +34,22 @@ def feedback_for_visibility(status: PoseStatus) -> FormFeedback | None:
     if status is PoseStatus.LOW_CONFIDENCE:
         return FormFeedback(FeedbackMessage.LOW_CONFIDENCE, is_visibility_issue=True)
     return None
+
+
+def upper_arm_drift_angle(
+    landmarks: ArmLandmarks, confidence_threshold: float
+) -> float | None:
+    """Measure upper-arm angle away from the shoulder-to-hip torso line."""
+    required = (landmarks.shoulder, landmarks.elbow, landmarks.hip)
+    if not all(point.is_reliable(confidence_threshold) for point in required):
+        return None
+    shoulder = landmarks.shoulder.point
+    elbow = landmarks.elbow.point
+    hip = landmarks.hip.point
+    if shoulder is None or elbow is None or hip is None:
+        return None
+    return calculate_elbow_angle(
+        (elbow.x, elbow.y),
+        (shoulder.x, shoulder.y),
+        (hip.x, hip.y),
+    )
