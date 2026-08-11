@@ -20,4 +20,6 @@ def decode_key(key_code: int) -> KeyAction:
     key = key_code & 0xFF
     if key in (ord("q"), ord("Q")):
         return KeyAction.QUIT
+    if key in (ord("r"), ord("R")):
+        return KeyAction.RESET
     return KeyAction.NONE
