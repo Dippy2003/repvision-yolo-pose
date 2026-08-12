@@ -165,6 +165,21 @@ When a workout ends, RepVision appends one row to `outputs/sessions.csv` by
 default. The row contains only the start datetime, exercise, selected arm,
 duration, repetitions, warning count, and average reliable repetition duration.
 
+## Troubleshooting
+
+- If the camera cannot open, close other camera applications and try
+  `repvision --check-camera --camera-index 1` for a second device.
+- If angle is `unavailable`, keep the selected shoulder, elbow, and wrist in
+  view, improve lighting, and confirm the correct arm with `--arm` or `L`.
+- If your keypoints are consistently below the default threshold, try
+  `repvision --confidence 0.3`. Lower values accept noisier detections and can
+  make the angle less stable.
+- The first pose run may need internet access to obtain the configured model.
+  Later runs can use the local `.pt` file. Tests never download model weights.
+- Keyboard commands work while the OpenCV workout window has focus.
+- If a previous `sessions.csv` has different columns, move it outside the
+  output directory so RepVision can create the current schema safely.
+
 ## Privacy
 
 RepVision processes webcam frames locally. Neither a diagnostic nor a live
