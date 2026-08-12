@@ -66,3 +66,13 @@ def test_pose_check_reports_structured_result(
     assert "angle=unavailable" in output
     assert "stage=unknown" in output
     assert "reps=0" in output
+
+
+def test_main_reports_invalid_configuration_as_cli_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        main(["--confidence", "1.5"])
+
+    assert exit_info.value.code == 2
+    assert "confidence_threshold must be between 0 and 1" in capsys.readouterr().err

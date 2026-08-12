@@ -89,7 +89,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run a diagnostic or start the continuous local workout."""
     parser = build_parser()
     args = parser.parse_args(argv)
-    config = config_from_args(args)
+    try:
+        config = config_from_args(args)
+    except ValueError as error:
+        parser.error(str(error))
     if args.check_camera:
         try:
             frame_shape = check_camera(config)
