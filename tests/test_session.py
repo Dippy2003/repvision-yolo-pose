@@ -8,6 +8,7 @@ from repvision.rep_counter import CurlUpdate, MovementStage
 from repvision.session import (
     SESSION_HEADERS,
     SessionAccumulator,
+    SessionLogError,
     SessionLogger,
     SessionSummary,
 )
@@ -165,3 +166,16 @@ def test_session_ignores_unreliable_rep_duration(duration: float | None) -> None
 
     assert summary.repetitions == 1
     assert summary.average_rep_duration_seconds is None
+
+
+def test_session_logger_rejects_incompatible_existing_csv(tmp_path) -> None:
+    path = tmp_path / "sessions.csv"
+    path.write_text("wrong,columns\n", encoding="utf-8")
+    summary = SessionSummary(
+        datetime(2026, 8, 12), "bicep_curl", Arm.RIGHT, 1.0, 0, 0, None
+    )
+
+    with pytest.raises(SessionLogError, match="incompatible header"):
+        SessionLogger(tmp_path).save(summary)
+
+    assert path.read_text(encoding="utf-8") == "wrong,columns\n"

@@ -138,14 +138,25 @@ class SessionLogger:
         """Create or append to the aggregate CSV and return its path."""
         try:
             self.output_directory.mkdir(parents=True, exist_ok=True)
-            include_header = not self.path.exists() or self.path.stat().st_size == 0
+            include_header = self._include_header()
             with self.path.open("a", encoding="utf-8", newline="") as file:
                 writer = csv.writer(file)
                 if include_header:
                     writer.writerow(SESSION_HEADERS)
                 writer.writerow(summary.as_csv_row())
-        except OSError as error:
+        except (OSError, UnicodeError) as error:
             raise SessionLogError(
                 f"Could not save aggregate session log: {error}"
             ) from error
         return self.path
+
+    def _include_header(self) -> bool:
+        if not self.path.exists() or self.path.stat().st_size == 0:
+            return True
+        with self.path.open(encoding="utf-8", newline="") as file:
+            existing_header = tuple(next(csv.reader(file), ()))
+        if existing_header != SESSION_HEADERS:
+            raise SessionLogError(
+                f"Existing session log has an incompatible header: {self.path}"
+            )
+        return False
