@@ -122,6 +122,20 @@ def test_read_rejects_invalid_bgr_frames(frame: NDArray[np.generic]) -> None:
         camera.read()
 
 
+def test_read_wraps_capture_backend_failure() -> None:
+    device = FakeCapture()
+
+    def failing_read() -> tuple[bool, NDArray[np.uint8] | None]:
+        raise RuntimeError("device disconnected")
+
+    device.read = failing_read  # type: ignore[method-assign]
+    camera = Camera(index=2, capture_factory=factory_for(device))
+    camera.open()
+
+    with pytest.raises(FrameReadError, match="device disconnected"):
+        camera.read()
+
+
 def test_release_is_safe_to_call_more_than_once() -> None:
     device = FakeCapture()
     camera = Camera(capture_factory=factory_for(device))

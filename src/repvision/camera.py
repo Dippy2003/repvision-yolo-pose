@@ -72,7 +72,12 @@ class Camera:
         if self._capture is None or not self._capture.isOpened():
             raise CameraNotOpenError("Camera must be opened before reading frames.")
 
-        success, frame = self._capture.read()
+        try:
+            success, frame = self._capture.read()
+        except (OSError, RuntimeError) as error:
+            raise FrameReadError(
+                f"Camera index {self.index} failed while reading: {error}"
+            ) from error
         if not success or frame is None:
             raise FrameReadError(
                 f"Could not read a frame from camera index {self.index}."
