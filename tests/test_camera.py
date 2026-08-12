@@ -9,6 +9,7 @@ from repvision.camera import (
     Camera,
     CameraNotOpenError,
     CameraOpenError,
+    CameraReleaseError,
     FrameReadError,
     InvalidFrameError,
 )
@@ -146,6 +147,23 @@ def test_release_is_safe_to_call_more_than_once() -> None:
 
     assert device.released
     assert not camera.is_open
+
+
+def test_release_clears_camera_after_backend_failure() -> None:
+    device = FakeCapture()
+
+    def failing_release() -> None:
+        raise RuntimeError("release failed")
+
+    device.release = failing_release  # type: ignore[method-assign]
+    camera = Camera(capture_factory=factory_for(device))
+    camera.open()
+
+    with pytest.raises(CameraReleaseError, match="release failed"):
+        camera.release()
+
+    assert not camera.is_open
+    camera.release()
 
 
 def test_context_manager_releases_capture_after_an_error() -> None:

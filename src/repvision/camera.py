@@ -97,8 +97,14 @@ class Camera:
     def release(self) -> None:
         """Release the owned capture device; repeated calls are safe."""
         if self._capture is not None:
-            self._capture.release()
+            capture = self._capture
             self._capture = None
+            try:
+                capture.release()
+            except (OSError, RuntimeError) as error:
+                raise CameraReleaseError(
+                    f"Could not release camera index {self.index}: {error}"
+                ) from error
 
     def __enter__(self) -> "Camera":
         self.open()
@@ -131,3 +137,7 @@ class FrameReadError(CameraError):
 
 class InvalidFrameError(CameraError):
     """Raised when a camera frame cannot be processed as uint8 BGR data."""
+
+
+class CameraReleaseError(CameraError):
+    """Raised when the capture backend cannot release the camera."""
