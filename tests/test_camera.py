@@ -175,3 +175,18 @@ def test_context_manager_releases_capture_after_an_error() -> None:
 
     assert device.released
     assert not camera.is_open
+
+
+def test_release_failure_does_not_hide_processing_error() -> None:
+    device = FakeCapture()
+
+    def failing_release() -> None:
+        raise RuntimeError("release failed")
+
+    device.release = failing_release  # type: ignore[method-assign]
+    camera = Camera(capture_factory=factory_for(device))
+
+    with pytest.raises(ValueError, match="processing failed"), camera:
+        raise ValueError("processing failed")
+
+    assert not camera.is_open

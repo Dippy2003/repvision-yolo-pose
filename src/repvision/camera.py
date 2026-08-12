@@ -116,7 +116,11 @@ class Camera:
         exc_value: BaseException | None,
         traceback: object,
     ) -> None:
-        self.release()
+        try:
+            self.release()
+        except CameraReleaseError:
+            if exc_type is None:
+                raise
 
 
 class CameraError(RuntimeError):
