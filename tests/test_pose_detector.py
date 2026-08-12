@@ -1,5 +1,5 @@
-from dataclasses import FrozenInstanceError
 import sys
+from dataclasses import FrozenInstanceError
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import patch
@@ -165,6 +165,15 @@ def test_model_inference_wraps_expected_backend_failures() -> None:
 
     with pytest.raises(PoseInferenceError, match="backend unavailable"):
         _run_model(FailingModel(), frame, 640)
+
+
+def test_model_inference_wraps_invalid_backend_arguments() -> None:
+    frame = np.zeros((12, 20, 3), dtype=np.uint8)
+    model = RecordingModel()
+    model.predict = lambda **_kwargs: (_ for _ in ()).throw(TypeError("bad input"))
+
+    with pytest.raises(PoseInferenceError, match="bad input"):
+        _run_model(model, frame, 640)
 
 
 def test_detector_handles_inference_without_people() -> None:

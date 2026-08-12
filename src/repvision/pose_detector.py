@@ -64,7 +64,7 @@ def load_ultralytics_model(model_name: str) -> PoseModel:
 def _run_model(model: PoseModel, frame: Frame, input_size: int) -> Sequence[object]:
     try:
         return model.predict(source=frame, imgsz=input_size, verbose=False)
-    except (OSError, RuntimeError, ValueError) as error:
+    except (OSError, RuntimeError, TypeError, ValueError) as error:
         raise PoseInferenceError(f"Pose inference failed: {error}") from error
 
 
