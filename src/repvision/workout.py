@@ -13,7 +13,7 @@ from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError, OpenCVDisplay
 from repvision.form_checker import FormChecker, FormFeedback
-from repvision.pose_detector import PoseDetector, PoseObservation
+from repvision.pose_detector import PoseDetector, PoseObservation, PoseStatus
 from repvision.renderer import OverlayData, Renderer, curl_progress
 from repvision.rep_counter import CurlTracker, CurlUpdate, MovementStage
 from repvision.session import SessionAccumulator, SessionLogger
@@ -71,10 +71,15 @@ class WorkoutEngine:
 
     def process(self, observation: PoseObservation, timestamp: float) -> FrameAnalysis:
         """Update movement, feedback, progress, and FPS for one frame."""
-        update = self.tracker.update(observation.selected_arm, timestamp=timestamp)
+        landmarks = observation.selected_arm
+        status = observation.status
+        if landmarks is not None and landmarks.arm is not self.state.arm:
+            landmarks = None
+            status = PoseStatus.MISSING_KEYPOINTS
+        update = self.tracker.update(landmarks, timestamp=timestamp)
         feedback = self.form_checker.check(
-            observation.status,
-            observation.selected_arm,
+            status,
+            landmarks,
             update.smoothed_angle,
             update.stage,
         )

@@ -8,7 +8,7 @@ from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError
 from repvision.form_checker import FeedbackMessage
-from repvision.pose_detector import PoseObservation, PoseStatus
+from repvision.pose_detector import ArmLandmarks, Landmark, PoseObservation, PoseStatus
 from repvision.rep_counter import MovementStage
 from repvision.workout import WorkoutEngine, WorkoutState, run_workout
 
@@ -55,6 +55,18 @@ def test_workout_engine_switch_resets_arm_specific_measurements() -> None:
     assert engine.state.arm is Arm.LEFT
     assert engine.fps_meter.fps == 0.0
     assert engine.tracker.counter.count == 0
+
+
+def test_workout_engine_ignores_observation_for_wrong_arm() -> None:
+    engine = WorkoutEngine(AppConfig(selected_arm=Arm.RIGHT))
+    missing = Landmark(None, 0.0)
+    left_arm = ArmLandmarks(Arm.LEFT, missing, missing, missing, missing)
+    observation = PoseObservation((), None, left_arm, PoseStatus.TRACKING)
+
+    analysis = engine.process(observation, 1.0)
+
+    assert analysis.update.smoothed_angle is None
+    assert analysis.feedback.message is FeedbackMessage.MOVE_BACK
 
 
 class FakeCamera:
