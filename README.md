@@ -37,9 +37,14 @@ development tools:
 
 ```console
 python -m venv .venv
+.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
+
+On macOS or Linux, activate with `source .venv/bin/activate` instead. If the
+`repvision` command is not found after installation, keep the environment
+activated or use `python -m repvision.app` with the same options.
 
 Ultralytics model weights are not downloaded during installation or tests.
 The default `yolo26n-pose.pt` weights download automatically from Ultralytics
@@ -65,6 +70,10 @@ Start a live workout (press `Q` to finish):
 ```console
 repvision
 ```
+
+For the most reliable side view, place the camera far enough away to keep your
+selected shoulder, elbow, wrist, and hip visible. Start with a fully extended
+arm, hold each endpoint briefly, and then complete the curl.
 
 The camera window shows the selected arm, repetition count, smoothed elbow
 angle, movement stage, feedback, curl progress, and frame rate. Its controls
