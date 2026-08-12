@@ -35,4 +35,7 @@ class OpenCVDisplay:
 
     def close(self) -> None:
         """Close all windows owned by OpenCV."""
-        cv2.destroyAllWindows()
+        try:
+            cv2.destroyAllWindows()
+        except cv2.error as error:
+            raise DisplayError(f"Could not close workout windows: {error}") from error

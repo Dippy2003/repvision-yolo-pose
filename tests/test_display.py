@@ -56,3 +56,13 @@ def test_display_closes_opencv_windows() -> None:
         OpenCVDisplay().close()
 
     destroy.assert_called_once_with()
+
+
+def test_display_wraps_opencv_close_error() -> None:
+    error = cv2.error("OpenCV", "destroyAllWindows", "unavailable", "window.cpp", 1)
+
+    with (
+        patch("repvision.display.cv2.destroyAllWindows", side_effect=error),
+        pytest.raises(DisplayError, match="Could not close workout windows"),
+    ):
+        OpenCVDisplay().close()
