@@ -179,3 +179,16 @@ def test_session_logger_rejects_incompatible_existing_csv(tmp_path) -> None:
         SessionLogger(tmp_path).save(summary)
 
     assert path.read_text(encoding="utf-8") == "wrong,columns\n"
+
+
+def test_session_logger_wraps_unusable_output_directory(tmp_path) -> None:
+    output_file = tmp_path / "not-a-directory"
+    output_file.write_text("occupied", encoding="utf-8")
+    summary = SessionSummary(
+        datetime(2026, 8, 12), "bicep_curl", Arm.RIGHT, 1.0, 0, 0, None
+    )
+
+    with pytest.raises(SessionLogError, match="Could not save aggregate session log"):
+        SessionLogger(output_file).save(summary)
+
+    assert output_file.read_text(encoding="utf-8") == "occupied"
