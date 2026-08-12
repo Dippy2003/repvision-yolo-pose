@@ -111,6 +111,8 @@ class RepCounter:
         self, angle: float | None, *, timestamp: float | None = None
     ) -> RepUpdate:
         """Process one angle without accepting unconfirmed endpoint changes."""
+        if timestamp is not None and not isfinite(timestamp):
+            raise ValueError("timestamp must be finite")
         target = self.classify(angle)
         if target is None or target is self.stage:
             self._clear_candidate()

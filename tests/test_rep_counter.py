@@ -327,3 +327,9 @@ def test_counter_reports_confirmed_rep_duration() -> None:
     completed = tracker.update(40.0, timestamp=11.25)
 
     assert completed.rep_duration_seconds == pytest.approx(1.25)
+
+
+@pytest.mark.parametrize("timestamp", [float("nan"), float("inf"), -float("inf")])
+def test_counter_rejects_non_finite_timestamp(timestamp: float) -> None:
+    with pytest.raises(ValueError, match="timestamp must be finite"):
+        counter().update(160.0, timestamp=timestamp)
