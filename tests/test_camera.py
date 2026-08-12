@@ -5,7 +5,13 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from repvision.camera import Camera, CameraNotOpenError, CameraOpenError, FrameReadError
+from repvision.camera import (
+    Camera,
+    CameraNotOpenError,
+    CameraOpenError,
+    FrameReadError,
+    InvalidFrameError,
+)
 
 
 @dataclass
@@ -87,6 +93,24 @@ def test_read_rejects_missing_frames(
     camera.open()
 
     with pytest.raises(FrameReadError, match="camera index 3"):
+        camera.read()
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [
+        np.zeros((0, 0, 3), dtype=np.uint8),
+        np.zeros((2, 2), dtype=np.uint8),
+        np.zeros((2, 2, 4), dtype=np.uint8),
+        np.zeros((2, 2, 3), dtype=np.float32),
+    ],
+)
+def test_read_rejects_invalid_bgr_frames(frame: NDArray[np.generic]) -> None:
+    device = FakeCapture(read_result=(True, frame))  # type: ignore[arg-type]
+    camera = Camera(index=2, capture_factory=factory_for(device))
+    camera.open()
+
+    with pytest.raises(InvalidFrameError, match="invalid BGR frame"):
         camera.read()
 
 
