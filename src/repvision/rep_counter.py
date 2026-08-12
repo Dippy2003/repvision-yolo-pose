@@ -68,6 +68,7 @@ class RepCounter:
         self._candidate_frames = 0
         self._last_rep_time: float | None = None
         self._down_started_at: float | None = None
+        self._last_timestamp: float | None = None
 
     @classmethod
     def from_config(cls, config: AppConfig) -> "RepCounter":
@@ -111,8 +112,12 @@ class RepCounter:
         self, angle: float | None, *, timestamp: float | None = None
     ) -> RepUpdate:
         """Process one angle without accepting unconfirmed endpoint changes."""
-        if timestamp is not None and not isfinite(timestamp):
+        now = monotonic() if timestamp is None else timestamp
+        if not isfinite(now):
             raise ValueError("timestamp must be finite")
+        if self._last_timestamp is not None and now < self._last_timestamp:
+            raise ValueError("timestamp must not move backwards")
+        self._last_timestamp = now
         target = self.classify(angle)
         if target is None or target is self.stage:
             self._clear_candidate()
@@ -126,7 +131,6 @@ class RepCounter:
         if self._candidate_frames < self.confirmation_frames:
             return self.snapshot()
 
-        now = monotonic() if timestamp is None else timestamp
         rep_completed = self.stage is MovementStage.DOWN and target is MovementStage.UP
         if (
             rep_completed
@@ -160,6 +164,7 @@ class RepCounter:
         self.stage = MovementStage.UNKNOWN
         self._last_rep_time = None
         self._down_started_at = None
+        self._last_timestamp = None
         self._clear_candidate()
 
 

@@ -333,3 +333,20 @@ def test_counter_reports_confirmed_rep_duration() -> None:
 def test_counter_rejects_non_finite_timestamp(timestamp: float) -> None:
     with pytest.raises(ValueError, match="timestamp must be finite"):
         counter().update(160.0, timestamp=timestamp)
+
+
+def test_counter_rejects_timestamp_that_moves_backwards() -> None:
+    tracker = counter()
+    tracker.update(160.0, timestamp=10.0)
+
+    with pytest.raises(ValueError, match="must not move backwards"):
+        tracker.update(160.0, timestamp=9.0)
+
+
+def test_counter_reset_accepts_new_timestamp_baseline() -> None:
+    tracker = counter()
+    tracker.update(160.0, timestamp=10.0)
+
+    tracker.reset()
+
+    tracker.update(160.0, timestamp=1.0)
