@@ -187,9 +187,17 @@ workout uploads, records, or saves frames or video. Only aggregate session
 values are written. Model files and generated image, video, and CSV artifacts
 are excluded from Git.
 
-## Current limitations
+## Limitations
 
 The tracker supports one selected arm and the largest detected person. Its 2D
 angle and form heuristic can be affected by occlusion, camera placement, loose
 clothing, and depth ambiguity. Form feedback is guidance, not a medical or
 biomechanical assessment.
+
+## Future improvements
+
+- Optional calibration for different users and camera positions
+- Additional exercises built on separate, tested movement state machines
+- A session-history view using the existing aggregate CSV data
+- Measured CPU performance profiles across supported model and input sizes
+- Optional audio cues that preserve the local-only privacy model
