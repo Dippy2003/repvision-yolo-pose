@@ -53,7 +53,12 @@ class Camera:
         if self.is_open:
             return
 
-        capture = self._capture_factory(self.index)
+        try:
+            capture = self._capture_factory(self.index)
+        except (OSError, RuntimeError) as error:
+            raise CameraOpenError(
+                f"Could not create camera index {self.index}: {error}"
+            ) from error
         if not capture.isOpened():
             capture.release()
             raise CameraOpenError(

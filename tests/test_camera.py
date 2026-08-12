@@ -70,6 +70,14 @@ def test_open_failure_releases_unusable_capture() -> None:
     assert not camera.is_open
 
 
+def test_open_wraps_capture_backend_failure() -> None:
+    def failing_factory(_index: int) -> FakeCapture:
+        raise RuntimeError("backend unavailable")
+
+    with pytest.raises(CameraOpenError, match="backend unavailable"):
+        Camera(index=1, capture_factory=failing_factory).open()
+
+
 def test_read_returns_frame_from_open_capture() -> None:
     expected = np.full((3, 4, 3), 17, dtype=np.uint8)
     device = FakeCapture(read_result=(True, expected))
