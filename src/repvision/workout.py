@@ -101,6 +101,11 @@ class WorkoutEngine:
         self.state.switch_arm()
         self.reset_measurements()
 
+    def toggle_pause(self) -> None:
+        """Pause or resume without including idle time in the FPS estimate."""
+        self.state.toggle_pause()
+        self.fps_meter.reset()
+
 
 def _cleared_analysis(_previous: FrameAnalysis) -> FrameAnalysis:
     return FrameAnalysis(
@@ -160,7 +165,7 @@ def run_workout(
                 if action is KeyAction.QUIT:
                     break
                 if action is KeyAction.TOGGLE_PAUSE:
-                    engine.state.toggle_pause()
+                    engine.toggle_pause()
                 elif action is KeyAction.RESET:
                     engine.reset_measurements()
                     accumulator.reset(wall_clock(), clock())

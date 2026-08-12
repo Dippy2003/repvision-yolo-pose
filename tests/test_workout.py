@@ -63,6 +63,19 @@ def test_workout_engine_switch_resets_arm_specific_measurements() -> None:
     assert engine.tracker.counter.count == 0
 
 
+def test_workout_engine_pause_resets_fps_baseline() -> None:
+    engine = WorkoutEngine(AppConfig())
+    observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
+    engine.process(observation, 1.0)
+    engine.process(observation, 1.1)
+    assert engine.fps_meter.fps > 0.0
+
+    engine.toggle_pause()
+
+    assert engine.state.paused
+    assert engine.fps_meter.fps == 0.0
+
+
 def test_workout_engine_ignores_observation_for_wrong_arm() -> None:
     engine = WorkoutEngine(AppConfig(selected_arm=Arm.RIGHT))
     missing = Landmark(None, 0.0)
