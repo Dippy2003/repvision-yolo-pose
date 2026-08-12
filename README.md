@@ -174,6 +174,9 @@ duration, repetitions, warning count, and average reliable repetition duration.
 - If your keypoints are consistently below the default threshold, try
   `repvision --confidence 0.3`. Lower values accept noisier detections and can
   make the angle less stable.
+- If CPU inference is too slow, try `repvision --input-size 480`. Smaller input
+  sizes usually improve throughput but can reduce keypoint quality, so confirm
+  that full curls still count reliably after changing it.
 - The first pose run may need internet access to obtain the configured model.
   Later runs can use the local `.pt` file. Tests never download model weights.
 - Keyboard commands work while the OpenCV workout window has focus.
