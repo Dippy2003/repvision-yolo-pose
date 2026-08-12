@@ -32,6 +32,17 @@ def test_curl_progress_clamps_to_configured_range(
         assert progress == pytest.approx(expected)
 
 
+@pytest.mark.parametrize(
+    ("up_threshold", "down_threshold"),
+    [(50.0, 50.0), (160.0, 50.0), (-1.0, 155.0), (50.0, 181.0)],
+)
+def test_curl_progress_rejects_invalid_thresholds(
+    up_threshold: float, down_threshold: float
+) -> None:
+    with pytest.raises(ValueError, match="thresholds"):
+        curl_progress(90.0, up_threshold, down_threshold)
+
+
 def test_overlay_data_keeps_workout_state_typed() -> None:
     overlay = OverlayData(
         arm=Arm.RIGHT,

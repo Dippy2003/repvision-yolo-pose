@@ -163,6 +163,8 @@ def curl_progress(
     angle: float | None, up_threshold: float, down_threshold: float
 ) -> float | None:
     """Map elbow angle to extension=0 and curl=1 progress."""
+    if not 0.0 <= up_threshold < down_threshold <= 180.0:
+        raise ValueError("thresholds must satisfy 0 <= up < down <= 180")
     if angle is None:
         return None
     progress = (down_threshold - angle) / (down_threshold - up_threshold)
