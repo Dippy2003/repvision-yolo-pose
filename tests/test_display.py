@@ -25,6 +25,26 @@ def test_display_decodes_waited_key() -> None:
     wait_key.assert_called_once_with(5)
 
 
+def test_display_treats_closed_window_as_quit() -> None:
+    with (
+        patch("repvision.display.cv2.waitKey", return_value=-1),
+        patch("repvision.display.cv2.getWindowProperty", return_value=0.0),
+    ):
+        action = OpenCVDisplay().read_action()
+
+    assert action is KeyAction.QUIT
+
+
+def test_display_keeps_running_when_window_is_visible() -> None:
+    with (
+        patch("repvision.display.cv2.waitKey", return_value=-1),
+        patch("repvision.display.cv2.getWindowProperty", return_value=1.0),
+    ):
+        action = OpenCVDisplay().read_action()
+
+    assert action is KeyAction.NONE
+
+
 def test_display_rejects_invalid_key_delay() -> None:
     with pytest.raises(ValueError, match="delay_ms must be positive"):
         OpenCVDisplay().read_action(0)

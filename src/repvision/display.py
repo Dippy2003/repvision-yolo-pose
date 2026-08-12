@@ -29,7 +29,11 @@ class OpenCVDisplay:
         if delay_ms < 1:
             raise ValueError("delay_ms must be positive")
         try:
-            return decode_key(cv2.waitKey(delay_ms))
+            action = decode_key(cv2.waitKey(delay_ms))
+            if action is not KeyAction.NONE:
+                return action
+            visible = cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE)
+            return KeyAction.NONE if visible >= 1.0 else KeyAction.QUIT
         except cv2.error as error:
             raise DisplayError(f"Could not read window input: {error}") from error
 
