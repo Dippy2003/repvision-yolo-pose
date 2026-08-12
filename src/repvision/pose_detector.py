@@ -44,13 +44,14 @@ PoseModelFactory = Callable[[str], PoseModel]
 
 def load_ultralytics_model(model_name: str) -> PoseModel:
     """Load the configured Ultralytics model on first detector construction."""
-    from ultralytics import YOLO
-
     try:
+        from ultralytics import YOLO
+
         return YOLO(model_name)
     except (
         ConnectionError,
         FileNotFoundError,
+        ImportError,
         OSError,
         RuntimeError,
         ValueError,

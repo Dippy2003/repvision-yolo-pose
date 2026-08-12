@@ -1,4 +1,5 @@
 from dataclasses import FrozenInstanceError
+import sys
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import patch
@@ -122,6 +123,14 @@ def test_ultralytics_loader_explains_model_failure() -> None:
         ),
     ):
         load_ultralytics_model("broken-pose.pt")
+
+
+def test_ultralytics_loader_explains_missing_dependency() -> None:
+    with (
+        patch.dict(sys.modules, {"ultralytics": None}),
+        pytest.raises(PoseModelLoadError, match="ultralytics"),
+    ):
+        load_ultralytics_model("chosen-pose.pt")
 
 
 def test_detector_loads_configured_model_once() -> None:
