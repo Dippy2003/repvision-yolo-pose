@@ -1,5 +1,6 @@
 """Small deterministic timing helpers for the workout loop."""
 
+from math import isfinite
 from time import monotonic
 
 
@@ -16,6 +17,8 @@ class FpsMeter:
     def update(self, timestamp: float | None = None) -> float:
         """Record one frame timestamp and return the smoothed frame rate."""
         now = monotonic() if timestamp is None else timestamp
+        if not isfinite(now):
+            raise ValueError("timestamp must be finite")
         if self._last_timestamp is not None:
             elapsed = now - self._last_timestamp
             if elapsed > 0.0:

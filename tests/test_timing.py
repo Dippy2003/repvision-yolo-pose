@@ -40,3 +40,9 @@ def test_fps_meter_reset_clears_measurement() -> None:
 def test_fps_meter_rejects_invalid_smoothing(smoothing: float) -> None:
     with pytest.raises(ValueError, match="smoothing"):
         FpsMeter(smoothing)
+
+
+@pytest.mark.parametrize("timestamp", [float("nan"), float("inf"), -float("inf")])
+def test_fps_meter_rejects_non_finite_timestamp(timestamp: float) -> None:
+    with pytest.raises(ValueError, match="timestamp must be finite"):
+        FpsMeter().update(timestamp)
