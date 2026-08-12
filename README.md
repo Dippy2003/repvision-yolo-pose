@@ -45,6 +45,19 @@ Ultralytics model weights are not downloaded during installation or tests.
 The default `yolo26n-pose.pt` weights download automatically from Ultralytics
 the first time a real pose check is run.
 
+## Architecture
+
+The live loop composes small boundaries instead of mixing camera, model, and
+movement responsibilities. `camera.py` owns capture resources;
+`pose_detector.py` converts YOLO output into application-owned pose types;
+`angles.py`, `rep_counter.py`, and `form_checker.py` contain independently
+testable movement rules. `renderer.py` draws the view, while `session.py` saves
+aggregate-only results. `workout.py` coordinates those components and `app.py`
+provides the command-line entry point.
+
+The model is constructed once per workout. Webcam frames pass through memory
+to inference and rendering and are not passed to session persistence.
+
 ## Commands
 
 Start a live workout (press `Q` to finish):
