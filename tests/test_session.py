@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pytest
+
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
 from repvision.rep_counter import CurlUpdate, MovementStage
@@ -106,3 +108,33 @@ def test_session_logger_appends_without_repeating_header(tmp_path) -> None:
     assert len(lines) == 3
     assert lines.count(",".join(SESSION_HEADERS)) == 1
     assert ",left,20.00,4,1,2.00" in lines[2]
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("exercise", " "),
+        ("duration_seconds", -1.0),
+        ("duration_seconds", float("nan")),
+        ("repetitions", -1),
+        ("warning_count", -1),
+        ("average_rep_duration_seconds", -0.1),
+        ("average_rep_duration_seconds", float("inf")),
+    ],
+)
+def test_session_summary_rejects_invalid_aggregate_values(
+    field: str, value: object
+) -> None:
+    values: dict[str, object] = {
+        "started_at": datetime(2026, 8, 12),
+        "exercise": "bicep_curl",
+        "arm": Arm.RIGHT,
+        "duration_seconds": 1.0,
+        "repetitions": 0,
+        "warning_count": 0,
+        "average_rep_duration_seconds": None,
+    }
+    values[field] = value
+
+    with pytest.raises(ValueError):
+        SessionSummary(**values)  # type: ignore[arg-type]

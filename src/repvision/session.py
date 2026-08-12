@@ -3,6 +3,7 @@
 import csv
 from dataclasses import dataclass
 from datetime import datetime
+from math import isfinite
 from pathlib import Path
 from statistics import fmean
 
@@ -36,6 +37,21 @@ class SessionSummary:
     repetitions: int
     warning_count: int
     average_rep_duration_seconds: float | None
+
+    def __post_init__(self) -> None:
+        if not self.exercise.strip():
+            raise ValueError("exercise must not be empty")
+        if not isfinite(self.duration_seconds) or self.duration_seconds < 0.0:
+            raise ValueError("duration_seconds must be finite and non-negative")
+        if self.repetitions < 0:
+            raise ValueError("repetitions must be non-negative")
+        if self.warning_count < 0:
+            raise ValueError("warning_count must be non-negative")
+        average = self.average_rep_duration_seconds
+        if average is not None and (not isfinite(average) or average < 0.0):
+            raise ValueError(
+                "average_rep_duration_seconds must be finite and non-negative"
+            )
 
     def as_csv_row(self) -> tuple[str, ...]:
         """Format aggregate values into the stable CSV schema."""
