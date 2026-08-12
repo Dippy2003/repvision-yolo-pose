@@ -8,6 +8,23 @@ pose inference, deterministic primary-person selection, selected-arm keypoint
 extraction, elbow-angle smoothing, confirmed repetition counting, conservative
 form feedback, a live overlay, keyboard controls, and aggregate session logs.
 
+## Main features
+
+- Local real-time pose inference with a configurable nano YOLO Pose model
+- Left- or right-arm tracking for the largest detected person
+- Confidence filtering, robust angle smoothing, and confirmed-frame counting
+- Readable live feedback, progress, repetition count, movement stage, and FPS
+- Pause, reset, arm-switch, keyboard quit, and window-close handling
+- Privacy-safe CSV summaries without saved webcam images or video
+
+## Technology stack
+
+- Python 3.11+
+- Ultralytics YOLO Pose and PyTorch
+- OpenCV and NumPy
+- Standard-library CSV persistence
+- Pytest and Ruff for offline quality checks
+
 ## Requirements
 
 - Python 3.11 or another version supported by the declared dependencies
