@@ -1,10 +1,12 @@
 from datetime import datetime
 
 import numpy as np
+import pytest
 
 from repvision.camera import Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
+from repvision.display import DisplayError
 from repvision.form_checker import FeedbackMessage
 from repvision.pose_detector import PoseObservation, PoseStatus
 from repvision.rep_counter import MovementStage
@@ -115,3 +117,26 @@ def test_run_workout_releases_resources_and_saves_only_aggregates(tmp_path) -> N
     assert detector.arms == [Arm.RIGHT]
     assert path.name == "sessions.csv"
     assert [item.name for item in tmp_path.iterdir()] == ["sessions.csv"]
+
+
+def test_window_cleanup_failure_does_not_hide_processing_error(tmp_path) -> None:
+    class FailingDetector(FakeDetector):
+        def detect(self, _frame: Frame, arm: Arm) -> PoseObservation:
+            del arm
+            raise RuntimeError("processing failed")
+
+    class FailingDisplay(FakeDisplay):
+        def close(self) -> None:
+            raise DisplayError("cleanup failed")
+
+    timestamps = iter([10.0])
+
+    with pytest.raises(RuntimeError, match="processing failed"):
+        run_workout(
+            AppConfig(output_directory=tmp_path),
+            camera_factory=FakeCamera,
+            detector_factory=FailingDetector,
+            display_factory=FailingDisplay,
+            clock=lambda: next(timestamps),
+            wall_clock=lambda: datetime(2026, 8, 12),
+        )

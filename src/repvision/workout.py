@@ -1,6 +1,8 @@
 """State and orchestration for a live local workout."""
 
+import sys
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -9,7 +11,7 @@ from time import monotonic
 from repvision.camera import Camera, Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
-from repvision.display import OpenCVDisplay
+from repvision.display import DisplayError, OpenCVDisplay
 from repvision.form_checker import FormChecker, FormFeedback
 from repvision.pose_detector import PoseDetector, PoseObservation
 from repvision.renderer import OverlayData, Renderer, curl_progress
@@ -163,7 +165,11 @@ def run_workout(
                     accumulator.reset(wall_clock(), clock())
                     latest_analysis = _cleared_analysis(latest_analysis)
     finally:
-        display.close()
+        if sys.exc_info()[0] is None:
+            display.close()
+        else:
+            with suppress(DisplayError):
+                display.close()
 
     summary = accumulator.summary(engine.state.arm, clock())
     return SessionLogger(config.output_directory).save(summary)
