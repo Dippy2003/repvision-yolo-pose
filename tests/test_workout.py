@@ -7,10 +7,16 @@ from repvision.camera import Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError
-from repvision.form_checker import FeedbackMessage
+from repvision.form_checker import FeedbackMessage, FormFeedback
 from repvision.pose_detector import ArmLandmarks, Landmark, PoseObservation, PoseStatus
-from repvision.rep_counter import MovementStage
-from repvision.workout import WorkoutEngine, WorkoutState, run_workout
+from repvision.rep_counter import CurlUpdate, MovementStage
+from repvision.workout import (
+    FrameAnalysis,
+    WorkoutEngine,
+    WorkoutState,
+    _cleared_analysis,
+    run_workout,
+)
 
 
 def test_workout_state_toggles_pause() -> None:
@@ -67,6 +73,22 @@ def test_workout_engine_ignores_observation_for_wrong_arm() -> None:
 
     assert analysis.update.smoothed_angle is None
     assert analysis.feedback.message is FeedbackMessage.MOVE_BACK
+
+
+def test_cleared_analysis_removes_stale_warning() -> None:
+    previous = FrameAnalysis(
+        update=CurlUpdate(None, 90.0, 3, MovementStage.DOWN),
+        feedback=FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True),
+        progress=0.5,
+        fps=20.0,
+    )
+
+    cleared = _cleared_analysis(previous)
+
+    assert cleared.update.count == 0
+    assert cleared.feedback.message is FeedbackMessage.GOOD_MOVEMENT
+    assert cleared.progress is None
+    assert cleared.fps == 0.0
 
 
 class FakeCamera:

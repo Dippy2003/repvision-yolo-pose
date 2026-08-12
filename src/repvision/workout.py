@@ -12,7 +12,7 @@ from repvision.camera import Camera, Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError, OpenCVDisplay
-from repvision.form_checker import FormChecker, FormFeedback
+from repvision.form_checker import FeedbackMessage, FormChecker, FormFeedback
 from repvision.pose_detector import PoseDetector, PoseObservation, PoseStatus
 from repvision.renderer import OverlayData, Renderer, curl_progress
 from repvision.rep_counter import CurlTracker, CurlUpdate, MovementStage
@@ -102,10 +102,10 @@ class WorkoutEngine:
         self.reset_measurements()
 
 
-def _cleared_analysis(previous: FrameAnalysis) -> FrameAnalysis:
+def _cleared_analysis(_previous: FrameAnalysis) -> FrameAnalysis:
     return FrameAnalysis(
         CurlUpdate(None, None, 0, MovementStage.UNKNOWN),
-        previous.feedback,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
         None,
         0.0,
     )
