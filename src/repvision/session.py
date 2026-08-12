@@ -71,6 +71,7 @@ class SessionAccumulator:
     """Collect aggregate-only statistics while frames remain in memory."""
 
     def __init__(self, started_at: datetime, started_monotonic: float) -> None:
+        self._validate_start_time(started_monotonic)
         self.started_at = started_at
         self.started_monotonic = started_monotonic
         self.repetitions = 0
@@ -86,12 +87,16 @@ class SessionAccumulator:
 
     def summary(self, arm: Arm, ended_monotonic: float) -> SessionSummary:
         """Build a bicep-curl summary at a supplied monotonic end time."""
+        if not isfinite(ended_monotonic):
+            raise ValueError("ended_monotonic must be finite")
+        if ended_monotonic < self.started_monotonic:
+            raise ValueError("ended_monotonic must not precede the session start")
         average = fmean(self._rep_durations) if self._rep_durations else None
         return SessionSummary(
             self.started_at,
             "bicep_curl",
             arm,
-            max(0.0, ended_monotonic - self.started_monotonic),
+            ended_monotonic - self.started_monotonic,
             self.repetitions,
             self.warning_counter.count,
             average,
@@ -99,11 +104,17 @@ class SessionAccumulator:
 
     def reset(self, started_at: datetime, started_monotonic: float) -> None:
         """Begin fresh aggregate statistics after an explicit workout reset."""
+        self._validate_start_time(started_monotonic)
         self.started_at = started_at
         self.started_monotonic = started_monotonic
         self.repetitions = 0
         self.warning_counter.reset()
         self._rep_durations.clear()
+
+    @staticmethod
+    def _validate_start_time(started_monotonic: float) -> None:
+        if not isfinite(started_monotonic):
+            raise ValueError("started_monotonic must be finite")
 
 
 class SessionLogger:

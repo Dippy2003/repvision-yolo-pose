@@ -138,3 +138,16 @@ def test_session_summary_rejects_invalid_aggregate_values(
 
     with pytest.raises(ValueError):
         SessionSummary(**values)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("timestamp", [float("nan"), float("inf")])
+def test_session_accumulator_rejects_invalid_start_time(timestamp: float) -> None:
+    with pytest.raises(ValueError, match="started_monotonic"):
+        SessionAccumulator(datetime(2026, 8, 12), timestamp)
+
+
+def test_session_summary_rejects_end_before_start() -> None:
+    accumulator = SessionAccumulator(datetime(2026, 8, 12), 10.0)
+
+    with pytest.raises(ValueError, match="must not precede"):
+        accumulator.summary(Arm.RIGHT, 9.0)
