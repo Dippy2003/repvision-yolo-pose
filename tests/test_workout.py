@@ -107,6 +107,7 @@ def test_cleared_analysis_removes_stale_warning() -> None:
 class FakeCamera:
     def __init__(self, _index: int) -> None:
         self.released = False
+        self.read_count = 0
 
     def __enter__(self) -> "FakeCamera":
         return self
@@ -115,6 +116,7 @@ class FakeCamera:
         self.released = True
 
     def read(self) -> Frame:
+        self.read_count += 1
         return np.zeros((300, 500, 3), dtype=np.uint8)
 
 
@@ -141,6 +143,16 @@ class FakeDisplay:
 
     def close(self) -> None:
         self.closed = True
+
+
+class SequenceDisplay(FakeDisplay):
+    def __init__(self, actions: list[KeyAction]) -> None:
+        super().__init__()
+        self.actions = iter(actions)
+
+    def read_action(self, delay_ms: int = 1) -> KeyAction:
+        del delay_ms
+        return next(self.actions)
 
 
 def test_run_workout_releases_resources_and_saves_only_aggregates(tmp_path) -> None:
@@ -187,3 +199,32 @@ def test_window_cleanup_failure_does_not_hide_processing_error(tmp_path) -> None
             clock=lambda: next(timestamps),
             wall_clock=lambda: datetime(2026, 8, 12),
         )
+
+
+def test_live_loop_applies_pause_reset_and_arm_switch_controls(tmp_path) -> None:
+    camera = FakeCamera(0)
+    detector = FakeDetector(AppConfig())
+    display = SequenceDisplay(
+        [
+            KeyAction.TOGGLE_PAUSE,
+            KeyAction.TOGGLE_PAUSE,
+            KeyAction.RESET,
+            KeyAction.SWITCH_ARM,
+            KeyAction.QUIT,
+        ]
+    )
+    timestamps = iter([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+
+    path = run_workout(
+        AppConfig(output_directory=tmp_path),
+        camera_factory=lambda _index: camera,
+        detector_factory=lambda _config: detector,
+        display_factory=lambda: display,
+        clock=lambda: next(timestamps),
+        wall_clock=lambda: datetime(2026, 8, 12, 12),
+    )
+
+    assert camera.read_count == 4
+    assert len(display.frames) == 5
+    assert detector.arms == [Arm.RIGHT, Arm.RIGHT, Arm.RIGHT, Arm.LEFT]
+    assert ",left,0.20,0,0," in path.read_text(encoding="utf-8")
