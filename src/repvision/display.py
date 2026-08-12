@@ -26,7 +26,12 @@ class OpenCVDisplay:
 
     def read_action(self, delay_ms: int = 1) -> KeyAction:
         """Wait briefly for a key and return its application action."""
-        return decode_key(cv2.waitKey(delay_ms))
+        if delay_ms < 1:
+            raise ValueError("delay_ms must be positive")
+        try:
+            return decode_key(cv2.waitKey(delay_ms))
+        except cv2.error as error:
+            raise DisplayError(f"Could not read window input: {error}") from error
 
     def close(self) -> None:
         """Close all windows owned by OpenCV."""

@@ -25,6 +25,21 @@ def test_display_decodes_waited_key() -> None:
     wait_key.assert_called_once_with(5)
 
 
+def test_display_rejects_invalid_key_delay() -> None:
+    with pytest.raises(ValueError, match="delay_ms must be positive"):
+        OpenCVDisplay().read_action(0)
+
+
+def test_display_wraps_opencv_input_error() -> None:
+    error = cv2.error("OpenCV", "waitKey", "unavailable", "window.cpp", 1)
+
+    with (
+        patch("repvision.display.cv2.waitKey", side_effect=error),
+        pytest.raises(DisplayError, match="Could not read window input"),
+    ):
+        OpenCVDisplay().read_action()
+
+
 def test_display_wraps_opencv_window_error() -> None:
     frame = np.zeros((10, 20, 3), dtype=np.uint8)
     error = cv2.error("OpenCV", "imshow", "unavailable", "display.cpp", 1)
