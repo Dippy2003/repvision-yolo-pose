@@ -82,8 +82,14 @@ class SessionAccumulator:
         """Consume one processed frame without retaining image data."""
         self.repetitions = update.count
         self.warning_counter.update(feedback)
-        if update.rep_completed and update.rep_duration_seconds is not None:
-            self._rep_durations.append(update.rep_duration_seconds)
+        duration = update.rep_duration_seconds
+        if (
+            update.rep_completed
+            and duration is not None
+            and isfinite(duration)
+            and duration >= 0.0
+        ):
+            self._rep_durations.append(duration)
 
     def summary(self, arm: Arm, ended_monotonic: float) -> SessionSummary:
         """Build a bicep-curl summary at a supplied monotonic end time."""

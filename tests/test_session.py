@@ -151,3 +151,17 @@ def test_session_summary_rejects_end_before_start() -> None:
 
     with pytest.raises(ValueError, match="must not precede"):
         accumulator.summary(Arm.RIGHT, 9.0)
+
+
+@pytest.mark.parametrize("duration", [None, -1.0, float("nan"), float("inf")])
+def test_session_ignores_unreliable_rep_duration(duration: float | None) -> None:
+    accumulator = SessionAccumulator(datetime(2026, 8, 12), 10.0)
+    accumulator.record(
+        CurlUpdate(None, 40.0, 1, MovementStage.UP, True, duration),
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+    )
+
+    summary = accumulator.summary(Arm.RIGHT, 11.0)
+
+    assert summary.repetitions == 1
+    assert summary.average_rep_duration_seconds is None
