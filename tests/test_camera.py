@@ -11,8 +11,8 @@ from repvision.camera import (
     CameraOpenError,
     CameraReleaseError,
     FrameReadError,
-    InvalidFrameError,
 )
+from repvision.frame_source import InvalidFrameError
 
 
 @dataclass

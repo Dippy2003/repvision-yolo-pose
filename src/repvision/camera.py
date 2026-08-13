@@ -8,7 +8,6 @@ from repvision.frame_source import (
     FrameSourceError,
     validate_bgr_frame,
 )
-from repvision.frame_source import InvalidFrameError as InvalidFrameError
 
 
 CaptureFactory = Callable[[int], CaptureDevice]
