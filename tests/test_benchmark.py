@@ -132,3 +132,20 @@ def test_benchmark_requires_frame_after_warmup() -> None:
             detector_factory=FakeDetector,
             clock=lambda: next(timestamps),
         )
+
+
+@pytest.mark.parametrize(
+    ("measured_frames", "warmup_frames", "message"),
+    [(0, 0, "measured_frames"), (1, -1, "warmup_frames")],
+)
+def test_benchmark_validates_frame_counts(
+    measured_frames: int, warmup_frames: int, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        run_benchmark(
+            AppConfig(),
+            lambda: FakeSource(2),
+            measured_frames=measured_frames,
+            warmup_frames=warmup_frames,
+            detector_factory=FakeDetector,
+        )
