@@ -111,8 +111,11 @@ def format_benchmark(result: BenchmarkResult) -> str:
         ("Total", result.timings.total),
     ):
         lines.append(_format_duration(label, summary))
-    fps = 1.0 / result.timings.total.mean_seconds
-    lines.append(f"Effective throughput: {fps:.1f} FPS")
+    total_mean = result.timings.total.mean_seconds
+    throughput = (
+        "unavailable" if total_mean == 0.0 else f"{1.0 / total_mean:.1f} FPS"
+    )
+    lines.append(f"Effective throughput: {throughput}")
     return "\n".join(lines)
 
 

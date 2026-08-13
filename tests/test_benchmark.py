@@ -42,6 +42,15 @@ def test_benchmark_report_formats_latency_and_throughput() -> None:
     assert "Effective throughput: 5.0 FPS" in report
 
 
+def test_benchmark_report_handles_zero_duration_clock() -> None:
+    zero = duration(0.0, count=1)
+    result = BenchmarkResult(
+        "test source", 320, 0, 1, PipelineSummary(zero, zero, zero, zero, zero)
+    )
+
+    assert "Effective throughput: unavailable" in format_benchmark(result)
+
+
 class FakeSource:
     description = "finite benchmark source"
 
