@@ -13,6 +13,7 @@ from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError, OpenCVDisplay
 from repvision.form_checker import FeedbackMessage, FormChecker, FormFeedback
+from repvision.frame_source import EndOfStream, FrameSource
 from repvision.pose_detector import PoseDetector, PoseObservation, PoseStatus
 from repvision.renderer import OverlayData, Renderer, curl_progress
 from repvision.rep_counter import CurlTracker, CurlUpdate, MovementStage
@@ -120,6 +121,7 @@ def run_workout(
     config: AppConfig,
     *,
     camera_factory: Callable[[int], Camera] = Camera,
+    source_factory: Callable[[], FrameSource] | None = None,
     detector_factory: Callable[[AppConfig], PoseDetector] = PoseDetector,
     display_factory: Callable[[], OpenCVDisplay] = OpenCVDisplay,
     renderer_factory: Callable[[], Renderer] = Renderer,
@@ -139,10 +141,18 @@ def run_workout(
     latest_analysis: FrameAnalysis | None = None
 
     try:
-        with camera_factory(config.camera_index) as camera:
+        source = (
+            camera_factory(config.camera_index)
+            if source_factory is None
+            else source_factory()
+        )
+        with source:
             while True:
                 if not engine.state.paused:
-                    latest_frame = camera.read()
+                    try:
+                        latest_frame = source.read()
+                    except EndOfStream:
+                        break
                     latest_observation = detector.detect(latest_frame, engine.state.arm)
                     latest_analysis = engine.process(latest_observation, clock())
                     accumulator.record(

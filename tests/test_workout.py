@@ -8,6 +8,7 @@ from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
 from repvision.display import DisplayError
 from repvision.form_checker import FeedbackMessage, FormFeedback
+from repvision.frame_source import EndOfStream
 from repvision.pose_detector import ArmLandmarks, Landmark, PoseObservation, PoseStatus
 from repvision.rep_counter import CurlUpdate, MovementStage
 from repvision.workout import (
@@ -155,6 +156,17 @@ class SequenceDisplay(FakeDisplay):
         return next(self.actions)
 
 
+class FiniteSource(FakeCamera):
+    @property
+    def description(self) -> str:
+        return "finite test source"
+
+    def read(self) -> Frame:
+        if self.read_count == 1:
+            raise EndOfStream("finished")
+        return super().read()
+
+
 def test_run_workout_releases_resources_and_saves_only_aggregates(tmp_path) -> None:
     camera = FakeCamera(0)
     detector = FakeDetector(AppConfig())
@@ -228,3 +240,23 @@ def test_live_loop_applies_pause_reset_and_arm_switch_controls(tmp_path) -> None
     assert len(display.frames) == 5
     assert detector.arms == [Arm.RIGHT, Arm.RIGHT, Arm.RIGHT, Arm.LEFT]
     assert ",left,0.20,0,0," in path.read_text(encoding="utf-8")
+
+
+def test_live_loop_finishes_cleanly_at_end_of_finite_source(tmp_path) -> None:
+    source = FiniteSource(0)
+    detector = FakeDetector(AppConfig())
+    display = SequenceDisplay([KeyAction.NONE])
+    timestamps = iter([0.0, 0.1, 0.2])
+
+    path = run_workout(
+        AppConfig(output_directory=tmp_path),
+        source_factory=lambda: source,
+        detector_factory=lambda _config: detector,
+        display_factory=lambda: display,
+        clock=lambda: next(timestamps),
+        wall_clock=lambda: datetime(2026, 8, 13),
+    )
+
+    assert source.released
+    assert len(display.frames) == 1
+    assert path.exists()
