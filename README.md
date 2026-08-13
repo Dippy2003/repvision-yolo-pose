@@ -110,6 +110,16 @@ Choose a different aggregate-log directory for a live workout:
 repvision --output-directory my-sessions
 ```
 
+Analyze a local prerecorded workout with the same pose and counting pipeline:
+
+```console
+repvision --video C:\Videos\curl-test.mp4 --confidence 0.3
+```
+
+The input video is opened read-only, processed locally, and never copied or
+saved by RepVision. The window closes automatically at the end of the video;
+the regular `Q`, `R`, `P`, and `L` controls remain available during playback.
+
 Run the quality checks:
 
 ```console
