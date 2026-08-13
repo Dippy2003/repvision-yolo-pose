@@ -73,3 +73,13 @@ def test_video_source_releases_unusable_capture(tmp_path: Path) -> None:
         VideoFileSource(path, capture_factory=lambda _path: capture).open()
 
     assert capture.released
+
+
+def test_video_source_wraps_capture_backend_failure(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+
+    def failing_factory(_path: str) -> FakeVideoCapture:
+        raise RuntimeError("backend unavailable")
+
+    with pytest.raises(VideoSourceError, match="backend unavailable"):
+        VideoFileSource(path, capture_factory=failing_factory).open()

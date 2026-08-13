@@ -48,7 +48,12 @@ class VideoFileSource:
             raise VideoSourceError(f"Video file does not exist: {self.path}")
         if not self.path.is_file():
             raise VideoSourceError(f"Video path is not a file: {self.path}")
-        capture = self._capture_factory(str(self.path))
+        try:
+            capture = self._capture_factory(str(self.path))
+        except (OSError, RuntimeError) as error:
+            raise VideoSourceError(
+                f"Could not create video capture for {self.path}: {error}"
+            ) from error
         if not capture.isOpened():
             capture.release()
             raise VideoSourceError(f"Could not open video file: {self.path}")
