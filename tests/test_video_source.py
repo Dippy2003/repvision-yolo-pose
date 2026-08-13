@@ -2,8 +2,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
+import pytest
 
-from repvision.video_source import VideoFileSource
+from repvision.video_source import VideoFileSource, VideoSourceError
 
 
 @dataclass
@@ -34,3 +35,10 @@ def test_video_source_describes_local_path(tmp_path: Path) -> None:
     path = make_video_path(tmp_path)
 
     assert VideoFileSource(path).description == f"video {path}"
+
+
+def test_video_source_rejects_missing_path(tmp_path: Path) -> None:
+    path = tmp_path / "missing.mp4"
+
+    with pytest.raises(VideoSourceError, match="does not exist"):
+        VideoFileSource(path).open()

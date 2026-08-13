@@ -4,7 +4,12 @@ from collections.abc import Callable
 from pathlib import Path
 
 from repvision.camera import CaptureDevice
-from repvision.frame_source import EndOfStream, Frame, FrameSourceError, validate_bgr_frame
+from repvision.frame_source import (
+    EndOfStream,
+    Frame,
+    FrameSourceError,
+    validate_bgr_frame,
+)
 
 VideoCaptureFactory = Callable[[str], CaptureDevice]
 
