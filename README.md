@@ -120,6 +120,26 @@ The input video is opened read-only, processed locally, and never copied or
 saved by RepVision. The window closes automatically at the end of the video;
 the regular `Q`, `R`, `P`, and `L` controls remain available during playback.
 
+Measure the complete camera pipeline without opening the workout window:
+
+```console
+repvision --benchmark --benchmark-frames 30 --warmup-frames 2 --confidence 0.3
+```
+
+For a repeatable comparison, benchmark the same local video at different input
+sizes:
+
+```console
+repvision --benchmark --video C:\Videos\curl-test.mp4 --input-size 320
+repvision --benchmark --video C:\Videos\curl-test.mp4 --input-size 480
+repvision --benchmark --video C:\Videos\curl-test.mp4 --input-size 640
+```
+
+The report includes mean, median, and p95 latency for capture, inference,
+movement analysis, rendering, and the complete frame, plus effective FPS.
+Warm-up frames are processed but excluded from those statistics. Only scalar
+timings are retained; benchmark mode does not save frames, video, or CSV data.
+
 Run the quality checks:
 
 ```console
