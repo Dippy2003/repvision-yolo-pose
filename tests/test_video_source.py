@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from repvision.frame_source import EndOfStream, InvalidFrameError
-from repvision.video_source import VideoFileSource, VideoSourceError
+from repvision.video_source import VideoFileSource, VideoReleaseError, VideoSourceError
 
 
 @dataclass
@@ -133,3 +133,20 @@ def test_video_source_rejects_malformed_frame(tmp_path: Path) -> None:
 
     with source, pytest.raises(InvalidFrameError, match="Video"):
         source.read()
+
+
+def test_video_source_clears_capture_after_release_failure(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture()
+
+    def failing_release() -> None:
+        raise RuntimeError("release failed")
+
+    capture.release = failing_release  # type: ignore[method-assign]
+    source = VideoFileSource(path, capture_factory=lambda _path: capture)
+    source.open()
+
+    with pytest.raises(VideoReleaseError, match="release failed"):
+        source.release()
+
+    source.release()

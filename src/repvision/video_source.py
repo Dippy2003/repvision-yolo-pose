@@ -25,6 +25,10 @@ class VideoSourceError(FrameSourceError):
     """Raised when a local video cannot be opened or read safely."""
 
 
+class VideoReleaseError(VideoSourceError):
+    """Raised when the video backend cannot release its resource."""
+
+
 class VideoFileSource:
     """Own an OpenCV capture for an existing local video file."""
 
@@ -78,7 +82,12 @@ class VideoFileSource:
         if self._capture is not None:
             capture = self._capture
             self._capture = None
-            capture.release()
+            try:
+                capture.release()
+            except (OSError, RuntimeError) as error:
+                raise VideoReleaseError(
+                    f"Could not release video {self.path}: {error}"
+                ) from error
 
     def __enter__(self) -> "VideoFileSource":
         self.open()
