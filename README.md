@@ -52,13 +52,15 @@ the first time a real pose check is run.
 
 ## Architecture
 
-The live loop composes small boundaries instead of mixing camera, model, and
-movement responsibilities. `camera.py` owns capture resources;
+The live loop composes small boundaries instead of mixing input, model, and
+movement responsibilities. `frame_source.py` defines the shared input boundary;
+`camera.py` and `video_source.py` safely own their OpenCV capture resources;
 `pose_detector.py` converts YOLO output into application-owned pose types;
 `angles.py`, `rep_counter.py`, and `form_checker.py` contain independently
 testable movement rules. `renderer.py` draws the view, while `session.py` saves
-aggregate-only results. `workout.py` coordinates those components and `app.py`
-provides the command-line entry point.
+aggregate-only results. `workout.py` coordinates those components,
+`benchmark.py` measures scalar pipeline latency, and `app.py` provides the
+command-line entry point.
 
 The model is constructed once per workout. Webcam frames pass through memory
 to inference and rendering and are not passed to session persistence.
