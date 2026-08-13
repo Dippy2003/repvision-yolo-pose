@@ -3,9 +3,12 @@
 from collections.abc import Callable
 from typing import Protocol
 
-import numpy as np
-
-from repvision.frame_source import Frame, FrameSourceError
+from repvision.frame_source import (
+    Frame,
+    FrameSourceError,
+    InvalidFrameError,
+    validate_bgr_frame,
+)
 
 
 class CaptureDevice(Protocol):
@@ -81,17 +84,7 @@ class Camera:
             raise FrameReadError(
                 f"Could not read a frame from camera index {self.index}."
             )
-        if (
-            not isinstance(frame, np.ndarray)
-            or frame.dtype != np.uint8
-            or frame.ndim != 3
-            or frame.shape[2] != 3
-            or frame.size == 0
-        ):
-            raise InvalidFrameError(
-                f"Camera index {self.index} returned an invalid BGR frame."
-            )
-        return frame
+        return validate_bgr_frame(frame, f"Camera index {self.index}")
 
     def release(self) -> None:
         """Release the owned capture device; repeated calls are safe."""
@@ -136,10 +129,6 @@ class CameraNotOpenError(CameraError):
 
 class FrameReadError(CameraError):
     """Raised when an opened camera does not provide a frame."""
-
-
-class InvalidFrameError(CameraError):
-    """Raised when a camera frame cannot be processed as uint8 BGR data."""
 
 
 class CameraReleaseError(CameraError):

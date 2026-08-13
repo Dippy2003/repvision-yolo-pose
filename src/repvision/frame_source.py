@@ -16,6 +16,23 @@ class EndOfStream(FrameSourceError):
     """Raised when a finite frame source has been consumed completely."""
 
 
+class InvalidFrameError(FrameSourceError):
+    """Raised when a source does not provide uint8 BGR image data."""
+
+
+def validate_bgr_frame(frame: object, source: str) -> Frame:
+    """Return a valid OpenCV BGR frame or raise a focused source error."""
+    if (
+        not isinstance(frame, np.ndarray)
+        or frame.dtype != np.uint8
+        or frame.ndim != 3
+        or frame.shape[2] != 3
+        or frame.size == 0
+    ):
+        raise InvalidFrameError(f"{source} returned an invalid BGR frame.")
+    return frame
+
+
 class FrameSource(Protocol):
     """Resource-owning source used by the workout and benchmark loops."""
 
