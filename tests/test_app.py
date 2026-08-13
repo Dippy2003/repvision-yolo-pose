@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from repvision.app import build_parser, config_from_args, main
+from repvision.app import build_parser, config_from_args, main, source_factory_from_args
+from repvision.camera import Camera
 from repvision.config import Arm
 from repvision.pose_detector import PoseObservation, PoseStatus
 from repvision.video_source import VideoFileSource
@@ -65,6 +66,16 @@ def test_video_input_rejects_camera_diagnostic(
 
     assert exit_info.value.code == 2
     assert "cannot be combined" in capsys.readouterr().err
+
+
+def test_source_factory_defaults_to_configured_camera() -> None:
+    args = build_parser().parse_args(["--camera-index", "3"])
+    config = config_from_args(args)
+
+    source = source_factory_from_args(args, config)()
+
+    assert isinstance(source, Camera)
+    assert source.index == 3
 
 
 def test_camera_check_reports_single_frame_shape(

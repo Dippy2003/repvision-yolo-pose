@@ -1,13 +1,13 @@
 """Command-line entry point for RepVision."""
 
 import argparse
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
-from repvision.frame_source import FrameSourceError
+from repvision.frame_source import FrameSource, FrameSourceError
 from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
 from repvision.rep_counter import CurlTracker
 from repvision.session import SessionLogError
@@ -92,6 +92,15 @@ def check_pose(config: AppConfig) -> PoseObservation:
         return detector.detect(camera.read())
 
 
+def source_factory_from_args(
+    args: argparse.Namespace, config: AppConfig
+) -> Callable[[], FrameSource]:
+    """Build a deferred webcam or local-video source factory."""
+    if args.video is not None:
+        return lambda: VideoFileSource(args.video)
+    return lambda: Camera(config.camera_index)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run a diagnostic or start the continuous local workout."""
     parser = build_parser()
@@ -128,9 +137,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
     try:
-        source_factory = (
-            None if args.video is None else lambda: VideoFileSource(args.video)
-        )
+        source_factory = source_factory_from_args(args, config)
         session_path = run_workout(config, source_factory=source_factory)
     except (
         DisplayError,
