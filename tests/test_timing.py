@@ -1,6 +1,11 @@
 import pytest
 
-from repvision.timing import FpsMeter, FrameTimings, summarize_durations
+from repvision.timing import (
+    FpsMeter,
+    FrameTimings,
+    PipelineProfiler,
+    summarize_durations,
+)
 
 
 def test_fps_meter_starts_after_two_frames() -> None:
@@ -76,3 +81,27 @@ def test_duration_summary_reports_central_and_tail_latency() -> None:
 def test_duration_summary_requires_a_sample() -> None:
     with pytest.raises(ValueError, match="at least one"):
         summarize_durations([])
+
+
+def test_pipeline_profiler_summarizes_each_stage() -> None:
+    profiler = PipelineProfiler()
+    profiler.record(FrameTimings(0.01, 0.10, 0.02, 0.03, 0.16))
+    profiler.record(FrameTimings(0.02, 0.20, 0.04, 0.06, 0.32))
+
+    summary = profiler.summary()
+
+    assert profiler.sample_count == 2
+    assert summary.capture.mean_seconds == pytest.approx(0.015)
+    assert summary.inference.median_seconds == pytest.approx(0.15)
+    assert summary.total.maximum_seconds == pytest.approx(0.32)
+
+
+def test_pipeline_profiler_reset_discards_samples() -> None:
+    profiler = PipelineProfiler()
+    profiler.record(FrameTimings(0.01, 0.10, 0.02, 0.03, 0.16))
+
+    profiler.reset()
+
+    assert profiler.sample_count == 0
+    with pytest.raises(ValueError, match="at least one"):
+        profiler.summary()
