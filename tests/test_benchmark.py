@@ -3,7 +3,12 @@ from collections.abc import Iterator
 import numpy as np
 import pytest
 
-from repvision.benchmark import BenchmarkResult, format_benchmark, run_benchmark
+from repvision.benchmark import (
+    BenchmarkError,
+    BenchmarkResult,
+    format_benchmark,
+    run_benchmark,
+)
 from repvision.config import AppConfig, Arm
 from repvision.frame_source import EndOfStream, Frame
 from repvision.pose_detector import PoseObservation, PoseStatus
@@ -113,3 +118,17 @@ def test_benchmark_reports_available_frames_at_early_end() -> None:
 
     assert result.warmup_frames == 1
     assert result.measured_frames == 1
+
+
+def test_benchmark_requires_frame_after_warmup() -> None:
+    timestamps = increasing_clock()
+
+    with pytest.raises(BenchmarkError, match="before any benchmark frames"):
+        run_benchmark(
+            AppConfig(),
+            lambda: FakeSource(1),
+            measured_frames=2,
+            warmup_frames=1,
+            detector_factory=FakeDetector,
+            clock=lambda: next(timestamps),
+        )
