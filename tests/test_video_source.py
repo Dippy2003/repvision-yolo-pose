@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from repvision.frame_source import EndOfStream
 from repvision.video_source import VideoFileSource, VideoSourceError
 
 
@@ -83,3 +84,26 @@ def test_video_source_wraps_capture_backend_failure(tmp_path: Path) -> None:
 
     with pytest.raises(VideoSourceError, match="backend unavailable"):
         VideoFileSource(path, capture_factory=failing_factory).open()
+
+
+def test_video_source_reads_next_frame(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    frame = np.full((3, 4, 3), 7, dtype=np.uint8)
+    source = VideoFileSource(
+        path,
+        capture_factory=lambda _path: FakeVideoCapture(frames=[frame]),
+    )
+
+    with source:
+        assert source.read() is frame
+
+
+def test_video_source_signals_normal_end_of_stream(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    source = VideoFileSource(
+        path,
+        capture_factory=lambda _path: FakeVideoCapture(),
+    )
+
+    with source, pytest.raises(EndOfStream, match="Reached the end"):
+        source.read()
