@@ -50,6 +50,11 @@ class Camera:
         """Return whether this wrapper owns a usable capture device."""
         return self._capture is not None and self._capture.isOpened()
 
+    @property
+    def description(self) -> str:
+        """Return a human-readable identifier for diagnostics."""
+        return f"camera index {self.index}"
+
     def open(self) -> None:
         """Open the configured camera or raise an understandable error."""
         if self.is_open:

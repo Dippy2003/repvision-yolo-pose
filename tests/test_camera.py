@@ -41,6 +41,10 @@ def test_camera_uses_default_device_index() -> None:
     assert Camera().index == 0
 
 
+def test_camera_description_includes_device_index() -> None:
+    assert Camera(2).description == "camera index 2"
+
+
 def test_camera_rejects_negative_device_index() -> None:
     with pytest.raises(ValueError, match="camera index must be zero or greater"):
         Camera(index=-1)
