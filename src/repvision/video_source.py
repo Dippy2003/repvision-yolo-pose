@@ -63,7 +63,12 @@ class VideoFileSource:
         """Return the next frame or signal normal end-of-stream."""
         if self._capture is None or not self._capture.isOpened():
             raise VideoSourceError("Video must be opened before reading frames.")
-        success, frame = self._capture.read()
+        try:
+            success, frame = self._capture.read()
+        except (OSError, RuntimeError) as error:
+            raise VideoSourceError(
+                f"Video failed while reading {self.path}: {error}"
+            ) from error
         if not success or frame is None:
             raise EndOfStream(f"Reached the end of video: {self.path}")
         return validate_bgr_frame(frame, self.description.capitalize())

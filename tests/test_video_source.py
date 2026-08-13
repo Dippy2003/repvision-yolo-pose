@@ -107,3 +107,17 @@ def test_video_source_signals_normal_end_of_stream(tmp_path: Path) -> None:
 
     with source, pytest.raises(EndOfStream, match="Reached the end"):
         source.read()
+
+
+def test_video_source_wraps_backend_read_failure(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture()
+
+    def failing_read() -> tuple[bool, np.ndarray | None]:
+        raise RuntimeError("decode failed")
+
+    capture.read = failing_read  # type: ignore[method-assign]
+    source = VideoFileSource(path, capture_factory=lambda _path: capture)
+
+    with source, pytest.raises(VideoSourceError, match="decode failed"):
+        source.read()
