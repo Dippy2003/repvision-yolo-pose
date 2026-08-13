@@ -150,3 +150,17 @@ def test_video_source_clears_capture_after_release_failure(tmp_path: Path) -> No
         source.release()
 
     source.release()
+
+
+def test_video_release_failure_does_not_hide_processing_error(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture()
+
+    def failing_release() -> None:
+        raise RuntimeError("release failed")
+
+    capture.release = failing_release  # type: ignore[method-assign]
+    source = VideoFileSource(path, capture_factory=lambda _path: capture)
+
+    with pytest.raises(ValueError, match="processing failed"), source:
+        raise ValueError("processing failed")
