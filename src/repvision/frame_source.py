@@ -2,7 +2,10 @@
 
 from typing import Protocol
 
-from repvision.camera import Frame
+import numpy as np
+from numpy.typing import NDArray
+
+Frame = NDArray[np.uint8]
 
 
 class FrameSourceError(RuntimeError):

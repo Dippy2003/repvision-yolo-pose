@@ -4,9 +4,8 @@ from collections.abc import Callable
 from typing import Protocol
 
 import numpy as np
-from numpy.typing import NDArray
 
-Frame = NDArray[np.uint8]
+from repvision.frame_source import Frame, FrameSourceError
 
 
 class CaptureDevice(Protocol):
@@ -123,7 +122,7 @@ class Camera:
                 raise
 
 
-class CameraError(RuntimeError):
+class CameraError(FrameSourceError):
     """Base class for expected camera failures."""
 
 
