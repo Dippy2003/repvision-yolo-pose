@@ -47,3 +47,19 @@ def test_video_source_rejects_missing_path(tmp_path: Path) -> None:
 def test_video_source_rejects_directory_path(tmp_path: Path) -> None:
     with pytest.raises(VideoSourceError, match="not a file"):
         VideoFileSource(tmp_path).open()
+
+
+def test_video_source_opens_existing_file(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture()
+    requested_paths: list[str] = []
+    source = VideoFileSource(
+        path,
+        capture_factory=lambda value: requested_paths.append(value) or capture,
+    )
+
+    source.open()
+
+    assert requested_paths == [str(path)]
+    assert not capture.released
+    source.release()
