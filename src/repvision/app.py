@@ -4,6 +4,7 @@ import argparse
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+from repvision.benchmark import BenchmarkError, format_benchmark, run_benchmark
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
@@ -63,6 +64,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--check-pose",
         action="store_true",
         help="load the model, analyze one camera frame, and exit",
+    )
+    diagnostics.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="measure the local pipeline without opening a display",
+    )
+    parser.add_argument(
+        "--benchmark-frames",
+        type=int,
+        default=30,
+        help="number of measured frames for --benchmark",
+    )
+    parser.add_argument(
+        "--warmup-frames",
+        type=int,
+        default=2,
+        help="unmeasured warm-up frames for --benchmark",
     )
     return parser
 
@@ -135,6 +153,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"arm={config.selected_arm.value}, angle={angle_text}, "
             f"stage={curl_update.stage.value}, reps={curl_update.count})."
         )
+        return 0
+    if args.benchmark:
+        try:
+            result = run_benchmark(
+                config,
+                source_factory_from_args(args, config),
+                measured_frames=args.benchmark_frames,
+                warmup_frames=args.warmup_frames,
+            )
+        except (BenchmarkError, FrameSourceError, PoseDetectorError) as error:
+            parser.error(str(error))
+        print(format_benchmark(result))
         return 0
     try:
         source_factory = source_factory_from_args(args, config)

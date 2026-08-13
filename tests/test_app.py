@@ -78,6 +78,29 @@ def test_source_factory_defaults_to_configured_camera() -> None:
     assert source.index == 3
 
 
+def test_main_runs_headless_pipeline_benchmark(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = object()
+    with (
+        patch("repvision.app.run_benchmark", return_value=result) as run,
+        patch("repvision.app.format_benchmark", return_value="benchmark report"),
+    ):
+        assert main(
+            [
+                "--benchmark",
+                "--benchmark-frames",
+                "12",
+                "--warmup-frames",
+                "3",
+            ]
+        ) == 0
+
+    assert run.call_args.kwargs["measured_frames"] == 12
+    assert run.call_args.kwargs["warmup_frames"] == 3
+    assert capsys.readouterr().out.strip() == "benchmark report"
+
+
 def test_camera_check_reports_single_frame_shape(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
