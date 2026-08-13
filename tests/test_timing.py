@@ -1,6 +1,6 @@
 import pytest
 
-from repvision.timing import FpsMeter, FrameTimings
+from repvision.timing import FpsMeter, FrameTimings, summarize_durations
 
 
 def test_fps_meter_starts_after_two_frames() -> None:
@@ -60,3 +60,19 @@ def test_frame_timings_keep_pipeline_stages_typed() -> None:
 def test_frame_timings_reject_invalid_duration(value: float) -> None:
     with pytest.raises(ValueError, match="finite and non-negative"):
         FrameTimings(value, 0.1, 0.1, 0.1, 0.4)
+
+
+def test_duration_summary_reports_central_and_tail_latency() -> None:
+    summary = summarize_durations([0.01, 0.02, 0.03, 0.04, 0.2])
+
+    assert summary.sample_count == 5
+    assert summary.mean_seconds == pytest.approx(0.06)
+    assert summary.median_seconds == pytest.approx(0.03)
+    assert summary.p95_seconds == pytest.approx(0.2)
+    assert summary.minimum_seconds == pytest.approx(0.01)
+    assert summary.maximum_seconds == pytest.approx(0.2)
+
+
+def test_duration_summary_requires_a_sample() -> None:
+    with pytest.raises(ValueError, match="at least one"):
+        summarize_durations([])

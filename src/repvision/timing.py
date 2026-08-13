@@ -1,7 +1,8 @@
 """Small deterministic timing helpers for the workout loop."""
 
 from dataclasses import dataclass
-from math import isfinite
+from math import ceil, isfinite
+from statistics import fmean, median
 from time import monotonic
 
 
@@ -25,6 +26,36 @@ class FrameTimings:
         )
         if any(not isfinite(value) or value < 0.0 for value in values):
             raise ValueError("frame timing values must be finite and non-negative")
+
+
+@dataclass(frozen=True, slots=True)
+class DurationSummary:
+    """Descriptive statistics for one measured pipeline stage."""
+
+    sample_count: int
+    mean_seconds: float
+    median_seconds: float
+    p95_seconds: float
+    minimum_seconds: float
+    maximum_seconds: float
+
+
+def summarize_durations(values: list[float]) -> DurationSummary:
+    """Summarize non-negative durations using nearest-rank p95."""
+    if not values:
+        raise ValueError("at least one duration is required")
+    if any(not isfinite(value) or value < 0.0 for value in values):
+        raise ValueError("durations must be finite and non-negative")
+    ordered = sorted(values)
+    p95_index = ceil(0.95 * len(ordered)) - 1
+    return DurationSummary(
+        len(ordered),
+        fmean(ordered),
+        median(ordered),
+        ordered[p95_index],
+        ordered[0],
+        ordered[-1],
+    )
 
 
 class FpsMeter:
