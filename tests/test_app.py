@@ -43,6 +43,19 @@ def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     assert "Aggregate session saved" in capsys.readouterr().out
 
 
+def test_main_builds_local_video_source(capsys: pytest.CaptureFixture[str]) -> None:
+    with patch(
+        "repvision.app.run_workout", return_value="outputs/sessions.csv"
+    ) as run:
+        assert main(["--video", "curl.mp4"]) == 0
+
+    source_factory = run.call_args.kwargs["source_factory"]
+    source = source_factory()
+    assert isinstance(source, VideoFileSource)
+    assert source.path == Path("curl.mp4")
+    assert "Aggregate session saved" in capsys.readouterr().out
+
+
 def test_camera_check_reports_single_frame_shape(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

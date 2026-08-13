@@ -7,9 +7,11 @@ from pathlib import Path
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
+from repvision.frame_source import FrameSourceError
 from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
 from repvision.rep_counter import CurlTracker
 from repvision.session import SessionLogError
+from repvision.video_source import VideoFileSource
 from repvision.workout import run_workout
 
 
@@ -45,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=defaults.output_directory,
         help="directory for aggregate session CSV data",
+    )
+    parser.add_argument(
+        "--video",
+        type=Path,
+        help="analyze a local video instead of opening a webcam",
     )
     diagnostics = parser.add_mutually_exclusive_group()
     diagnostics.add_argument(
@@ -119,8 +126,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
     try:
-        session_path = run_workout(config)
-    except (CameraError, DisplayError, PoseDetectorError, SessionLogError) as error:
+        source_factory = (
+            None if args.video is None else lambda: VideoFileSource(args.video)
+        )
+        session_path = run_workout(config, source_factory=source_factory)
+    except (
+        DisplayError,
+        FrameSourceError,
+        PoseDetectorError,
+        SessionLogError,
+    ) as error:
         parser.error(str(error))
     print(f"Workout complete. Aggregate session saved to {session_path}.")
     return 0
