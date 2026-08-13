@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from repvision.camera import CaptureDevice
 from repvision.frame_source import (
+    CaptureDevice,
     EndOfStream,
     Frame,
     FrameSourceError,

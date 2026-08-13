@@ -1,24 +1,14 @@
 """Webcam capture boundary for the desktop application."""
 
 from collections.abc import Callable
-from typing import Protocol
 
 from repvision.frame_source import (
+    CaptureDevice,
     Frame,
     FrameSourceError,
     validate_bgr_frame,
 )
 from repvision.frame_source import InvalidFrameError as InvalidFrameError
-
-
-class CaptureDevice(Protocol):
-    """Small interface implemented by OpenCV and test capture devices."""
-
-    def isOpened(self) -> bool: ...
-
-    def read(self) -> tuple[bool, Frame | None]: ...
-
-    def release(self) -> None: ...
 
 
 CaptureFactory = Callable[[int], CaptureDevice]

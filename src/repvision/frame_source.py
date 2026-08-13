@@ -8,6 +8,16 @@ from numpy.typing import NDArray
 Frame = NDArray[np.uint8]
 
 
+class CaptureDevice(Protocol):
+    """OpenCV-compatible capture surface shared by local sources."""
+
+    def isOpened(self) -> bool: ...
+
+    def read(self) -> tuple[bool, Frame | None]: ...
+
+    def release(self) -> None: ...
+
+
 class FrameSourceError(RuntimeError):
     """Base class for expected local frame-source failures."""
 
