@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from repvision.frame_source import EndOfStream
+from repvision.frame_source import EndOfStream, InvalidFrameError
 from repvision.video_source import VideoFileSource, VideoSourceError
 
 
@@ -120,4 +120,16 @@ def test_video_source_wraps_backend_read_failure(tmp_path: Path) -> None:
     source = VideoFileSource(path, capture_factory=lambda _path: capture)
 
     with source, pytest.raises(VideoSourceError, match="decode failed"):
+        source.read()
+
+
+def test_video_source_rejects_malformed_frame(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    invalid = np.zeros((3, 4), dtype=np.uint8)
+    source = VideoFileSource(
+        path,
+        capture_factory=lambda _path: FakeVideoCapture(frames=[invalid]),
+    )
+
+    with source, pytest.raises(InvalidFrameError, match="Video"):
         source.read()
