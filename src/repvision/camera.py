@@ -9,7 +9,6 @@ from repvision.frame_source import (
     validate_bgr_frame,
 )
 
-
 CaptureFactory = Callable[[int], CaptureDevice]
 
 
