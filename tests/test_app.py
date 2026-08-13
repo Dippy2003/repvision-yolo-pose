@@ -6,6 +6,7 @@ import pytest
 from repvision.app import build_parser, config_from_args, main
 from repvision.config import Arm
 from repvision.pose_detector import PoseObservation, PoseStatus
+from repvision.video_source import VideoFileSource
 
 
 def test_cli_overrides_foundation_settings() -> None:
@@ -54,6 +55,16 @@ def test_main_builds_local_video_source(capsys: pytest.CaptureFixture[str]) -> N
     assert isinstance(source, VideoFileSource)
     assert source.path == Path("curl.mp4")
     assert "Aggregate session saved" in capsys.readouterr().out
+
+
+def test_video_input_rejects_camera_diagnostic(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        main(["--video", "curl.mp4", "--check-camera"])
+
+    assert exit_info.value.code == 2
+    assert "cannot be combined" in capsys.readouterr().err
 
 
 def test_camera_check_reports_single_frame_shape(
