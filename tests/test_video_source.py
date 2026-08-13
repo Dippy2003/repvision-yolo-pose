@@ -63,3 +63,13 @@ def test_video_source_opens_existing_file(tmp_path: Path) -> None:
     assert requested_paths == [str(path)]
     assert not capture.released
     source.release()
+
+
+def test_video_source_releases_unusable_capture(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture(opened=False)
+
+    with pytest.raises(VideoSourceError, match="Could not open video"):
+        VideoFileSource(path, capture_factory=lambda _path: capture).open()
+
+    assert capture.released
