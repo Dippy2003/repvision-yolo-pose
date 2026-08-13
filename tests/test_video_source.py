@@ -42,3 +42,8 @@ def test_video_source_rejects_missing_path(tmp_path: Path) -> None:
 
     with pytest.raises(VideoSourceError, match="does not exist"):
         VideoFileSource(path).open()
+
+
+def test_video_source_rejects_directory_path(tmp_path: Path) -> None:
+    with pytest.raises(VideoSourceError, match="not a file"):
+        VideoFileSource(tmp_path).open()
