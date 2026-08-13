@@ -1,7 +1,30 @@
 """Small deterministic timing helpers for the workout loop."""
 
+from dataclasses import dataclass
 from math import isfinite
 from time import monotonic
+
+
+@dataclass(frozen=True, slots=True)
+class FrameTimings:
+    """Measured durations for one fully processed frame."""
+
+    capture_seconds: float
+    inference_seconds: float
+    analysis_seconds: float
+    render_seconds: float
+    total_seconds: float
+
+    def __post_init__(self) -> None:
+        values = (
+            self.capture_seconds,
+            self.inference_seconds,
+            self.analysis_seconds,
+            self.render_seconds,
+            self.total_seconds,
+        )
+        if any(not isfinite(value) or value < 0.0 for value in values):
+            raise ValueError("frame timing values must be finite and non-negative")
 
 
 class FpsMeter:

@@ -1,6 +1,6 @@
 import pytest
 
-from repvision.timing import FpsMeter
+from repvision.timing import FpsMeter, FrameTimings
 
 
 def test_fps_meter_starts_after_two_frames() -> None:
@@ -46,3 +46,17 @@ def test_fps_meter_rejects_invalid_smoothing(smoothing: float) -> None:
 def test_fps_meter_rejects_non_finite_timestamp(timestamp: float) -> None:
     with pytest.raises(ValueError, match="timestamp must be finite"):
         FpsMeter().update(timestamp)
+
+
+def test_frame_timings_keep_pipeline_stages_typed() -> None:
+    timings = FrameTimings(0.01, 0.1, 0.002, 0.003, 0.12)
+
+    assert timings.capture_seconds == 0.01
+    assert timings.inference_seconds == 0.1
+    assert timings.total_seconds == 0.12
+
+
+@pytest.mark.parametrize("value", [-1.0, float("nan"), float("inf")])
+def test_frame_timings_reject_invalid_duration(value: float) -> None:
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        FrameTimings(value, 0.1, 0.1, 0.1, 0.4)
