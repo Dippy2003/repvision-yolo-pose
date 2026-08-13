@@ -162,7 +162,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 measured_frames=args.benchmark_frames,
                 warmup_frames=args.warmup_frames,
             )
-        except (BenchmarkError, FrameSourceError, PoseDetectorError) as error:
+        except (
+            BenchmarkError,
+            FrameSourceError,
+            PoseDetectorError,
+            ValueError,
+        ) as error:
             parser.error(str(error))
         print(format_benchmark(result))
         return 0

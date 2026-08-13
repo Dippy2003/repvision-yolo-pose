@@ -101,6 +101,16 @@ def test_main_runs_headless_pipeline_benchmark(
     assert capsys.readouterr().out.strip() == "benchmark report"
 
 
+def test_main_reports_invalid_benchmark_frame_count(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        main(["--benchmark", "--benchmark-frames", "0"])
+
+    assert exit_info.value.code == 2
+    assert "measured_frames must be positive" in capsys.readouterr().err
+
+
 def test_camera_check_reports_single_frame_shape(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
