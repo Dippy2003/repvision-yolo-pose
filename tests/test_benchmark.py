@@ -5,7 +5,7 @@ import pytest
 
 from repvision.benchmark import BenchmarkResult, format_benchmark, run_benchmark
 from repvision.config import AppConfig, Arm
-from repvision.frame_source import Frame
+from repvision.frame_source import EndOfStream, Frame
 from repvision.pose_detector import PoseObservation, PoseStatus
 from repvision.timing import DurationSummary, PipelineSummary
 
@@ -48,6 +48,8 @@ class FakeSource:
         pass
 
     def read(self) -> Frame:
+        if self.frame_count == 0:
+            raise EndOfStream("finished")
         self.frame_count -= 1
         return np.zeros((300, 500, 3), dtype=np.uint8)
 
@@ -95,3 +97,19 @@ def test_run_benchmark_measures_each_pipeline_stage() -> None:
     assert result.measured_frames == 2
     assert result.timings.capture.mean_seconds == pytest.approx(0.01)
     assert result.timings.total.mean_seconds == pytest.approx(0.04)
+
+
+def test_benchmark_reports_available_frames_at_early_end() -> None:
+    timestamps = increasing_clock()
+
+    result = run_benchmark(
+        AppConfig(),
+        lambda: FakeSource(2),
+        measured_frames=5,
+        warmup_frames=1,
+        detector_factory=FakeDetector,
+        clock=lambda: next(timestamps),
+    )
+
+    assert result.warmup_frames == 1
+    assert result.measured_frames == 1
