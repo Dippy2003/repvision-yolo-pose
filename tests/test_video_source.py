@@ -66,6 +66,25 @@ def test_video_source_opens_existing_file(tmp_path: Path) -> None:
     source.release()
 
 
+def test_video_source_open_is_idempotent(tmp_path: Path) -> None:
+    path = make_video_path(tmp_path)
+    capture = FakeVideoCapture()
+    calls = 0
+
+    def factory(_path: str) -> FakeVideoCapture:
+        nonlocal calls
+        calls += 1
+        return capture
+
+    source = VideoFileSource(path, capture_factory=factory)
+    source.open()
+    source.open()
+
+    assert source.is_open
+    assert calls == 1
+    source.release()
+
+
 def test_video_source_releases_unusable_capture(tmp_path: Path) -> None:
     path = make_video_path(tmp_path)
     capture = FakeVideoCapture(opened=False)

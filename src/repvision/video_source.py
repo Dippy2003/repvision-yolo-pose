@@ -46,8 +46,15 @@ class VideoFileSource:
         """Return the input filename without copying its contents."""
         return f"video {self.path}"
 
+    @property
+    def is_open(self) -> bool:
+        """Return whether this source owns a usable video capture."""
+        return self._capture is not None and self._capture.isOpened()
+
     def open(self) -> None:
         """Open an existing regular file as a video source."""
+        if self.is_open:
+            return
         if not self.path.exists():
             raise VideoSourceError(f"Video file does not exist: {self.path}")
         if not self.path.is_file():
@@ -65,8 +72,9 @@ class VideoFileSource:
 
     def read(self) -> Frame:
         """Return the next frame or signal normal end-of-stream."""
-        if self._capture is None or not self._capture.isOpened():
+        if not self.is_open:
             raise VideoSourceError("Video must be opened before reading frames.")
+        assert self._capture is not None
         try:
             success, frame = self._capture.read()
         except (OSError, RuntimeError) as error:
