@@ -167,6 +167,11 @@ class FiniteSource(FakeCamera):
         return super().read()
 
 
+class EmptySource(FiniteSource):
+    def read(self) -> Frame:
+        raise EndOfStream("empty")
+
+
 def test_run_workout_releases_resources_and_saves_only_aggregates(tmp_path) -> None:
     camera = FakeCamera(0)
     detector = FakeDetector(AppConfig())
@@ -259,4 +264,23 @@ def test_live_loop_finishes_cleanly_at_end_of_finite_source(tmp_path) -> None:
 
     assert source.released
     assert len(display.frames) == 1
+    assert path.exists()
+
+
+def test_live_loop_handles_source_without_frames(tmp_path) -> None:
+    source = EmptySource(0)
+    display = FakeDisplay()
+    timestamps = iter([0.0, 0.1])
+
+    path = run_workout(
+        AppConfig(output_directory=tmp_path),
+        source_factory=lambda: source,
+        detector_factory=FakeDetector,
+        display_factory=lambda: display,
+        clock=lambda: next(timestamps),
+        wall_clock=lambda: datetime(2026, 8, 13),
+    )
+
+    assert display.frames == []
+    assert display.closed
     assert path.exists()
