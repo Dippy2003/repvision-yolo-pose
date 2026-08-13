@@ -6,9 +6,9 @@ from typing import Protocol
 from repvision.frame_source import (
     Frame,
     FrameSourceError,
-    InvalidFrameError,
     validate_bgr_frame,
 )
+from repvision.frame_source import InvalidFrameError as InvalidFrameError
 
 
 class CaptureDevice(Protocol):

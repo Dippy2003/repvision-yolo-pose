@@ -1,7 +1,7 @@
-from repvision.camera import CameraError
 import numpy as np
 import pytest
 
+from repvision.camera import CameraError
 from repvision.frame_source import (
     EndOfStream,
     FrameSourceError,
