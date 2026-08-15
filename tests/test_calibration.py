@@ -4,13 +4,14 @@ from datetime import UTC, datetime
 import pytest
 
 from repvision.calibration import (
+    CalibrationCollector,
     CalibrationError,
     CalibrationPosition,
     CalibrationProfile,
     CalibrationRangeError,
     CalibrationStorageError,
 )
-from repvision.config import Arm
+from repvision.config import AppConfig, Arm
 
 
 def test_calibration_positions_have_stable_values() -> None:
@@ -83,3 +84,12 @@ def test_calibration_profile_requires_robust_sample_count() -> None:
 def test_calibration_profile_requires_timezone() -> None:
     with pytest.raises(ValueError, match="include a timezone"):
         replace(profile(), calibrated_at=datetime(2026, 8, 15, 9, 30))
+
+
+def test_calibration_collector_retains_valid_endpoint_angles() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.LEFT)
+
+    assert collector.add(CalibrationPosition.EXTENDED, 160.0) == 1
+    assert collector.add(CalibrationPosition.EXTENDED, 162.0) == 2
+    assert collector.sample_count(CalibrationPosition.EXTENDED) == 2
+    assert collector.sample_count(CalibrationPosition.CURLED) == 0

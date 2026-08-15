@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 from math import isfinite
 
-from repvision.config import Arm
+from repvision.config import AppConfig, Arm
 
 CALIBRATION_SCHEMA_VERSION = 1
 
@@ -70,3 +70,30 @@ class CalibrationProfile:
     def movement_range(self) -> float:
         """Return the measured endpoint range in degrees."""
         return self.extended_angle - self.curled_angle
+
+
+class CalibrationCollector:
+    """Collect bounded valid endpoint angles before deriving a profile."""
+
+    def __init__(self, config: AppConfig, arm: Arm) -> None:
+        self.config = config
+        self.arm = arm
+        self._samples: dict[CalibrationPosition, list[float]] = {
+            CalibrationPosition.EXTENDED: [],
+            CalibrationPosition.CURLED: [],
+        }
+
+    def add(self, position: CalibrationPosition, angle: float | None) -> int:
+        """Add one usable angle and return that endpoint's retained count."""
+        samples = self._samples[position]
+        if angle is None or not isfinite(angle):
+            return len(samples)
+        if not 0.0 <= angle <= 180.0:
+            raise ValueError("calibration angle must be between 0 and 180")
+        if len(samples) < self.config.calibration_sample_target:
+            samples.append(float(angle))
+        return len(samples)
+
+    def sample_count(self, position: CalibrationPosition) -> int:
+        """Return retained valid samples for one endpoint."""
+        return len(self._samples[position])
