@@ -27,6 +27,7 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.output_directory == Path("outputs")
     assert config.calibration_sample_target == 20
     assert config.calibration_minimum_range == 60.0
+    assert config.calibration_threshold_margin == 10.0
 
 
 @pytest.mark.parametrize(
@@ -106,3 +107,9 @@ def test_calibration_requires_enough_samples(sample_target: int) -> None:
 def test_calibration_range_stays_physical(minimum_range: float) -> None:
     with pytest.raises(ValueError, match="calibration_minimum_range"):
         AppConfig(calibration_minimum_range=minimum_range)
+
+
+@pytest.mark.parametrize("margin", [0.0, -1.0, 30.0, 31.0])
+def test_calibration_margin_preserves_threshold_order(margin: float) -> None:
+    with pytest.raises(ValueError, match="calibration_threshold_margin"):
+        AppConfig(calibration_threshold_margin=margin)
