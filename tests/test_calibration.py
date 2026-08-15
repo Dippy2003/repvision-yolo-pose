@@ -325,7 +325,7 @@ def test_calibration_store_rejects_unknown_schema_version(tmp_path: Path) -> Non
     path = tmp_path / "calibration.json"
     path.write_text(json.dumps({"version": 2, "arms": {}}), encoding="utf-8")
 
-    with pytest.raises(CalibrationStorageError, match="Unsupported.*2"):
+    with pytest.raises(CalibrationStorageError, match=r"Unsupported.*2"):
         CalibrationStore(path).load_all()
 
 
@@ -334,4 +334,26 @@ def test_calibration_store_requires_arm_mapping(tmp_path: Path) -> None:
     path.write_text(json.dumps({"version": 1, "arms": []}), encoding="utf-8")
 
     with pytest.raises(CalibrationStorageError, match="arms must be an object"):
+        CalibrationStore(path).load_all()
+
+
+def test_calibration_store_rejects_unknown_arm_key(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(
+        json.dumps({"version": 1, "arms": {"middle": profile_to_dict(profile())}}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CalibrationStorageError, match="Unsupported calibration arm"):
+        CalibrationStore(path).load_all()
+
+
+def test_calibration_store_rejects_arm_key_mismatch(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(
+        json.dumps({"version": 1, "arms": {"left": profile_to_dict(profile())}}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CalibrationStorageError, match="does not match"):
         CalibrationStore(path).load_all()
