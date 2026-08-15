@@ -1,4 +1,7 @@
+from dataclasses import replace
 from datetime import UTC, datetime
+
+import pytest
 
 from repvision.calibration import (
     CalibrationError,
@@ -38,3 +41,19 @@ def test_calibration_profile_keeps_personalized_range() -> None:
     assert result.arm is Arm.RIGHT
     assert result.movement_range == 122.0
     assert result.samples_per_position == 20
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("curled_angle", -1.0),
+        ("extended_angle", 181.0),
+        ("up_threshold", float("nan")),
+        ("down_threshold", float("inf")),
+    ],
+)
+def test_calibration_profile_rejects_invalid_angles(
+    field: str, value: float
+) -> None:
+    with pytest.raises(ValueError, match="finite and between"):
+        replace(profile(), **{field: value})
