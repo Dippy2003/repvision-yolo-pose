@@ -93,3 +93,13 @@ def test_calibration_collector_retains_valid_endpoint_angles() -> None:
     assert collector.add(CalibrationPosition.EXTENDED, 162.0) == 2
     assert collector.sample_count(CalibrationPosition.EXTENDED) == 2
     assert collector.sample_count(CalibrationPosition.CURLED) == 0
+
+
+@pytest.mark.parametrize("angle", [None, float("nan"), float("inf")])
+def test_calibration_collector_ignores_missing_measurements(
+    angle: float | None,
+) -> None:
+    collector = CalibrationCollector(AppConfig(), Arm.RIGHT)
+
+    assert collector.add(CalibrationPosition.CURLED, angle) == 0
+    assert collector.sample_count(CalibrationPosition.CURLED) == 0
