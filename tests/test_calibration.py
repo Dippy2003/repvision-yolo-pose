@@ -319,3 +319,19 @@ def test_calibration_store_rejects_invalid_document_structure(
 
     with pytest.raises(CalibrationStorageError, match="structure"):
         CalibrationStore(path).load_all()
+
+
+def test_calibration_store_rejects_unknown_schema_version(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(json.dumps({"version": 2, "arms": {}}), encoding="utf-8")
+
+    with pytest.raises(CalibrationStorageError, match="Unsupported.*2"):
+        CalibrationStore(path).load_all()
+
+
+def test_calibration_store_requires_arm_mapping(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(json.dumps({"version": 1, "arms": []}), encoding="utf-8")
+
+    with pytest.raises(CalibrationStorageError, match="arms must be an object"):
+        CalibrationStore(path).load_all()
