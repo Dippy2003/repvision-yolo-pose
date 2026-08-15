@@ -26,6 +26,7 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.input_size == 640
     assert config.output_directory == Path("outputs")
     assert config.calibration_sample_target == 20
+    assert config.calibration_minimum_range == 60.0
 
 
 @pytest.mark.parametrize(
@@ -99,3 +100,9 @@ def test_arm_drift_threshold_stays_conservative(threshold: float) -> None:
 def test_calibration_requires_enough_samples(sample_target: int) -> None:
     with pytest.raises(ValueError, match="calibration_sample_target"):
         AppConfig(calibration_sample_target=sample_target)
+
+
+@pytest.mark.parametrize("minimum_range", [0.0, -1.0, 180.0, 181.0])
+def test_calibration_range_stays_physical(minimum_range: float) -> None:
+    with pytest.raises(ValueError, match="calibration_minimum_range"):
+        AppConfig(calibration_minimum_range=minimum_range)

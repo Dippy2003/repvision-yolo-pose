@@ -29,6 +29,7 @@ class AppConfig:
     input_size: int = 640
     output_directory: Path = Path("outputs")
     calibration_sample_target: int = 20
+    calibration_minimum_range: float = 60.0
 
     def __post_init__(self) -> None:
         if not self.model_name.strip():
@@ -53,3 +54,5 @@ class AppConfig:
             raise ValueError("input_size must be positive")
         if self.calibration_sample_target < 3:
             raise ValueError("calibration_sample_target must be at least 3")
+        if not 0.0 < self.calibration_minimum_range < 180.0:
+            raise ValueError("calibration_minimum_range must be between 0 and 180")
