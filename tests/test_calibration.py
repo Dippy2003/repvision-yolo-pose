@@ -263,3 +263,12 @@ def test_default_calibration_path_uses_windows_local_app_data() -> None:
     )
 
     assert path == Path(r"C:\Users\Test\AppData\Local\RepVision\calibration.json")
+
+
+def test_default_calibration_path_uses_cross_platform_config_home() -> None:
+    assert default_calibration_path(
+        {"XDG_CONFIG_HOME": "/config"}, home=Path("/home/test")
+    ) == Path("/config/repvision/calibration.json")
+    assert default_calibration_path({}, home=Path("/home/test")) == Path(
+        "/home/test/.config/repvision/calibration.json"
+    )
