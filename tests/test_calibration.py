@@ -57,3 +57,19 @@ def test_calibration_profile_rejects_invalid_angles(
 ) -> None:
     with pytest.raises(ValueError, match="finite and between"):
         replace(profile(), **{field: value})
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("curled_angle", 60.0),
+        ("up_threshold", 154.0),
+        ("down_threshold", 52.0),
+        ("extended_angle", 154.0),
+    ],
+)
+def test_calibration_profile_requires_ordered_endpoints(
+    field: str, value: float
+) -> None:
+    with pytest.raises(ValueError, match="curled < up < down < extended"):
+        replace(profile(), **{field: value})
