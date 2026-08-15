@@ -181,5 +181,17 @@ def test_calibration_profile_rejects_insufficient_movement_range() -> None:
     for angle in (50.0, 51.0, 52.0):
         collector.add(CalibrationPosition.CURLED, angle)
 
-    with pytest.raises(CalibrationRangeError, match="too small.*minimum 60.0"):
+    with pytest.raises(CalibrationRangeError, match=r"too small.*minimum 60\.0"):
         collector.build_profile()
+
+
+def test_calibration_profile_default_timestamp_is_timezone_aware() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    for angle in (160.0, 161.0, 162.0):
+        collector.add(CalibrationPosition.EXTENDED, angle)
+    for angle in (40.0, 41.0, 42.0):
+        collector.add(CalibrationPosition.CURLED, angle)
+
+    result = collector.build_profile()
+
+    assert result.calibrated_at.utcoffset() is not None
