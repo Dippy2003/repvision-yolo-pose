@@ -269,6 +269,10 @@ class CalibrationStore:
         """Atomically add or replace one arm's aggregate profile."""
         profiles = self.load_all()
         profiles[profile.arm] = profile
+        self._write_profiles(profiles)
+        return self.path
+
+    def _write_profiles(self, profiles: dict[Arm, CalibrationProfile]) -> None:
         ordered_profiles = sorted(
             profiles.items(), key=lambda item: item[0].value
         )
@@ -302,8 +306,15 @@ class CalibrationStore:
             raise CalibrationStorageError(
                 f"Could not save calibration file {self.path}: {error}"
             ) from error
-        return self.path
 
     def load(self, arm: Arm) -> CalibrationProfile | None:
         """Return one arm's saved profile when available."""
         return self.load_all().get(arm)
+
+    def reset(self, arm: Arm) -> bool:
+        """Remove one arm profile and preserve any other saved arm."""
+        profiles = self.load_all()
+        removed = profiles.pop(arm, None) is not None
+        if removed:
+            self._write_profiles(profiles)
+        return removed

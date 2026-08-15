@@ -409,3 +409,15 @@ def test_calibration_store_loads_one_selected_arm(tmp_path: Path) -> None:
 
     assert store.load(Arm.RIGHT) == profile()
     assert store.load(Arm.LEFT) is None
+
+
+def test_calibration_store_resets_only_selected_arm(tmp_path: Path) -> None:
+    store = CalibrationStore(tmp_path / "calibration.json")
+    right = profile()
+    left = replace(profile(), arm=Arm.LEFT, curled_angle=45.0, up_threshold=55.0)
+    store.save(right)
+    store.save(left)
+
+    assert store.reset(Arm.RIGHT)
+    assert store.load_all() == {Arm.LEFT: left}
+    assert not store.reset(Arm.RIGHT)
