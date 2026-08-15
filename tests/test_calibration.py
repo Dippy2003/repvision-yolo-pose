@@ -10,6 +10,7 @@ from repvision.calibration import (
     CalibrationProfile,
     CalibrationRangeError,
     CalibrationStorageError,
+    profile_to_dict,
 )
 from repvision.config import AppConfig, Arm
 
@@ -210,3 +211,19 @@ def test_calibration_collector_resets_one_or_both_positions() -> None:
     collector.reset()
 
     assert collector.sample_count(CalibrationPosition.CURLED) == 0
+
+
+def test_profile_serialization_contains_only_aggregate_calibration() -> None:
+    data = profile_to_dict(profile())
+
+    assert data == {
+        "arm": "right",
+        "curled_angle": 42.0,
+        "extended_angle": 164.0,
+        "up_threshold": 52.0,
+        "down_threshold": 154.0,
+        "samples_per_position": 20,
+        "calibrated_at": "2026-08-15T09:30:00+00:00",
+    }
+    assert "frame" not in data
+    assert "keypoints" not in data

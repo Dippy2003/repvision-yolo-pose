@@ -141,3 +141,16 @@ class CalibrationCollector:
         positions = tuple(CalibrationPosition) if position is None else (position,)
         for selected in positions:
             self._samples[selected].clear()
+
+
+def profile_to_dict(profile: CalibrationProfile) -> dict[str, object]:
+    """Serialize one profile without any frame or raw keypoint data."""
+    return {
+        "arm": profile.arm.value,
+        "curled_angle": profile.curled_angle,
+        "extended_angle": profile.extended_angle,
+        "up_threshold": profile.up_threshold,
+        "down_threshold": profile.down_threshold,
+        "samples_per_position": profile.samples_per_position,
+        "calibrated_at": profile.calibrated_at.isoformat(),
+    }
