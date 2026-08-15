@@ -73,3 +73,13 @@ def test_calibration_profile_requires_ordered_endpoints(
 ) -> None:
     with pytest.raises(ValueError, match="curled < up < down < extended"):
         replace(profile(), **{field: value})
+
+
+def test_calibration_profile_requires_robust_sample_count() -> None:
+    with pytest.raises(ValueError, match="samples_per_position"):
+        replace(profile(), samples_per_position=2)
+
+
+def test_calibration_profile_requires_timezone() -> None:
+    with pytest.raises(ValueError, match="include a timezone"):
+        replace(profile(), calibrated_at=datetime(2026, 8, 15, 9, 30))
