@@ -1,5 +1,6 @@
 """Personal arm-range calibration and local profile persistence."""
 
+import json
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -219,3 +220,45 @@ def profile_from_dict(data: object) -> CalibrationProfile:
         raise CalibrationStorageError(
             f"Stored calibration profile is invalid: {error}"
         ) from error
+
+
+class CalibrationStore:
+    """Load and save versioned aggregate calibration profiles."""
+
+    def __init__(self, path: Path | None = None) -> None:
+        self.path = default_calibration_path() if path is None else path
+
+    def load_all(self) -> dict[Arm, CalibrationProfile]:
+        """Return saved profiles, or an empty mapping before first use."""
+        if not self.path.exists():
+            return {}
+        try:
+            document = json.loads(self.path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError, UnicodeError) as error:
+            raise CalibrationStorageError(
+                f"Could not read calibration file {self.path}: {error}"
+            ) from error
+        if not isinstance(document, dict) or set(document) != {"version", "arms"}:
+            raise CalibrationStorageError("Calibration file structure is invalid.")
+        if document["version"] != CALIBRATION_SCHEMA_VERSION:
+            raise CalibrationStorageError(
+                f"Unsupported calibration version: {document['version']}"
+            )
+        arms = document["arms"]
+        if not isinstance(arms, dict):
+            raise CalibrationStorageError("Calibration arms must be an object.")
+        profiles: dict[Arm, CalibrationProfile] = {}
+        for arm_value, stored_profile in arms.items():
+            try:
+                arm = Arm(arm_value)
+            except ValueError as error:
+                raise CalibrationStorageError(
+                    f"Unsupported calibration arm: {arm_value}"
+                ) from error
+            parsed = profile_from_dict(stored_profile)
+            if parsed.arm is not arm:
+                raise CalibrationStorageError(
+                    f"Calibration arm key does not match profile: {arm.value}"
+                )
+            profiles[arm] = parsed
+        return profiles

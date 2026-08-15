@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -10,6 +11,7 @@ from repvision.calibration import (
     CalibrationPosition,
     CalibrationProfile,
     CalibrationRangeError,
+    CalibrationStore,
     CalibrationStorageError,
     default_calibration_path,
     profile_from_dict,
@@ -272,3 +274,26 @@ def test_default_calibration_path_uses_cross_platform_config_home() -> None:
     assert default_calibration_path({}, home=Path("/home/test")) == Path(
         "/home/test/.config/repvision/calibration.json"
     )
+
+
+def test_calibration_store_returns_empty_before_first_save(tmp_path: Path) -> None:
+    store = CalibrationStore(tmp_path / "settings" / "calibration.json")
+
+    assert store.load_all() == {}
+
+
+def test_calibration_store_loads_versioned_arm_profiles(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "arms": {"right": profile_to_dict(profile())},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    loaded = CalibrationStore(path).load_all()
+
+    assert loaded == {Arm.RIGHT: profile()}
