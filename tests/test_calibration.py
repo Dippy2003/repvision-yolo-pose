@@ -434,3 +434,10 @@ def test_apply_calibration_returns_updated_runtime_config() -> None:
     assert updated.input_size == 480
     assert config.up_angle_threshold == 50.0
     assert config.down_angle_threshold == 155.0
+
+
+def test_apply_calibration_rejects_wrong_selected_arm() -> None:
+    config = AppConfig(selected_arm=Arm.LEFT)
+
+    with pytest.raises(CalibrationError, match=r"right.*left"):
+        apply_calibration(config, profile())
