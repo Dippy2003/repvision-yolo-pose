@@ -15,6 +15,7 @@ from repvision.calibration import (
     CalibrationStore,
     apply_calibration,
     default_calibration_path,
+    load_calibrated_config,
     profile_from_dict,
     profile_to_dict,
 )
@@ -441,3 +442,27 @@ def test_apply_calibration_rejects_wrong_selected_arm() -> None:
 
     with pytest.raises(CalibrationError, match=r"right.*left"):
         apply_calibration(config, profile())
+
+
+def test_load_calibrated_config_uses_profile_when_available(tmp_path: Path) -> None:
+    store = CalibrationStore(tmp_path / "calibration.json")
+    store.save(profile())
+
+    config, loaded = load_calibrated_config(AppConfig(), store)
+
+    assert loaded == profile()
+    assert config.up_angle_threshold == 52.0
+    assert config.down_angle_threshold == 154.0
+
+
+def test_load_calibrated_config_preserves_defaults_when_absent(
+    tmp_path: Path,
+) -> None:
+    original = AppConfig(selected_arm=Arm.LEFT)
+
+    config, loaded = load_calibrated_config(
+        original, CalibrationStore(tmp_path / "missing.json")
+    )
+
+    assert config is original
+    assert loaded is None

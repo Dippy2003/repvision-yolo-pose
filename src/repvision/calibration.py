@@ -334,3 +334,14 @@ def apply_calibration(
         up_angle_threshold=profile.up_threshold,
         down_angle_threshold=profile.down_threshold,
     )
+
+
+def load_calibrated_config(
+    config: AppConfig, store: CalibrationStore | None = None
+) -> tuple[AppConfig, CalibrationProfile | None]:
+    """Apply a saved selected-arm profile, preserving defaults when absent."""
+    selected_store = CalibrationStore() if store is None else store
+    profile = selected_store.load(config.selected_arm)
+    if profile is None:
+        return config, None
+    return apply_calibration(config, profile), profile
