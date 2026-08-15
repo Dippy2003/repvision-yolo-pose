@@ -97,3 +97,12 @@ class CalibrationCollector:
     def sample_count(self, position: CalibrationPosition) -> int:
         """Return retained valid samples for one endpoint."""
         return len(self._samples[position])
+
+    def position_ready(self, position: CalibrationPosition) -> bool:
+        """Return whether one endpoint has the configured number of samples."""
+        return self.sample_count(position) >= self.config.calibration_sample_target
+
+    @property
+    def complete(self) -> bool:
+        """Return whether both endpoint positions are ready."""
+        return all(self.position_ready(position) for position in CalibrationPosition)

@@ -121,3 +121,18 @@ def test_calibration_collector_bounds_retained_history() -> None:
 
     assert count == 3
     assert collector.sample_count(CalibrationPosition.EXTENDED) == 3
+
+
+def test_calibration_collector_reports_endpoint_readiness() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    for angle in (160.0, 161.0, 162.0):
+        collector.add(CalibrationPosition.EXTENDED, angle)
+
+    assert collector.position_ready(CalibrationPosition.EXTENDED)
+    assert not collector.position_ready(CalibrationPosition.CURLED)
+    assert not collector.complete
+
+    for angle in (40.0, 41.0, 42.0):
+        collector.add(CalibrationPosition.CURLED, angle)
+
+    assert collector.complete
