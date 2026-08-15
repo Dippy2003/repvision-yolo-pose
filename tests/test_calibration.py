@@ -160,3 +160,26 @@ def test_calibration_profile_uses_endpoint_medians_and_margin() -> None:
     assert result.up_threshold == 52.0
     assert result.down_threshold == 154.0
     assert result.calibrated_at == timestamp
+
+
+def test_calibration_profile_requires_both_positions() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    for angle in (160.0, 161.0, 162.0):
+        collector.add(CalibrationPosition.EXTENDED, angle)
+
+    with pytest.raises(CalibrationError, match="extended and curled"):
+        collector.build_profile()
+
+
+def test_calibration_profile_rejects_insufficient_movement_range() -> None:
+    collector = CalibrationCollector(
+        AppConfig(calibration_sample_target=3, calibration_minimum_range=60.0),
+        Arm.RIGHT,
+    )
+    for angle in (100.0, 101.0, 102.0):
+        collector.add(CalibrationPosition.EXTENDED, angle)
+    for angle in (50.0, 51.0, 52.0):
+        collector.add(CalibrationPosition.CURLED, angle)
+
+    with pytest.raises(CalibrationRangeError, match="too small.*minimum 60.0"):
+        collector.build_profile()
