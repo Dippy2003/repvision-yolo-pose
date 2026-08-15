@@ -390,3 +390,14 @@ def test_calibration_store_does_not_overwrite_corrupt_file(tmp_path: Path) -> No
         CalibrationStore(path).save(profile())
 
     assert path.read_text(encoding="utf-8") == original
+
+
+def test_calibration_store_wraps_unusable_parent_path(tmp_path: Path) -> None:
+    occupied = tmp_path / "occupied"
+    occupied.write_text("not a directory", encoding="utf-8")
+    store = CalibrationStore(occupied / "calibration.json")
+
+    with pytest.raises(CalibrationStorageError, match="Could not save"):
+        store.save(profile())
+
+    assert occupied.read_text(encoding="utf-8") == "not a directory"
