@@ -103,3 +103,11 @@ def test_calibration_collector_ignores_missing_measurements(
 
     assert collector.add(CalibrationPosition.CURLED, angle) == 0
     assert collector.sample_count(CalibrationPosition.CURLED) == 0
+
+
+@pytest.mark.parametrize("angle", [-0.1, 180.1])
+def test_calibration_collector_rejects_out_of_range_angle(angle: float) -> None:
+    collector = CalibrationCollector(AppConfig(), Arm.RIGHT)
+
+    with pytest.raises(ValueError, match="between 0 and 180"):
+        collector.add(CalibrationPosition.EXTENDED, angle)
