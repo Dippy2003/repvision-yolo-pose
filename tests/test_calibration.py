@@ -11,8 +11,8 @@ from repvision.calibration import (
     CalibrationPosition,
     CalibrationProfile,
     CalibrationRangeError,
-    CalibrationStore,
     CalibrationStorageError,
+    CalibrationStore,
     default_calibration_path,
     profile_from_dict,
     profile_to_dict,
@@ -297,3 +297,11 @@ def test_calibration_store_loads_versioned_arm_profiles(tmp_path: Path) -> None:
     loaded = CalibrationStore(path).load_all()
 
     assert loaded == {Arm.RIGHT: profile()}
+
+
+def test_calibration_store_explains_malformed_json(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text("{not-json", encoding="utf-8")
+
+    with pytest.raises(CalibrationStorageError, match="Could not read"):
+        CalibrationStore(path).load_all()
