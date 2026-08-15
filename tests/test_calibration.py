@@ -379,3 +379,14 @@ def test_calibration_store_preserves_profiles_for_both_arms(tmp_path: Path) -> N
     store.save(left)
 
     assert store.load_all() == {Arm.LEFT: left, Arm.RIGHT: right}
+
+
+def test_calibration_store_does_not_overwrite_corrupt_file(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    original = "{corrupt existing data"
+    path.write_text(original, encoding="utf-8")
+
+    with pytest.raises(CalibrationStorageError):
+        CalibrationStore(path).save(profile())
+
+    assert path.read_text(encoding="utf-8") == original
