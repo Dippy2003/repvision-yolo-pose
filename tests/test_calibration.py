@@ -401,3 +401,11 @@ def test_calibration_store_wraps_unusable_parent_path(tmp_path: Path) -> None:
         store.save(profile())
 
     assert occupied.read_text(encoding="utf-8") == "not a directory"
+
+
+def test_calibration_store_loads_one_selected_arm(tmp_path: Path) -> None:
+    store = CalibrationStore(tmp_path / "calibration.json")
+    store.save(profile())
+
+    assert store.load(Arm.RIGHT) == profile()
+    assert store.load(Arm.LEFT) is None

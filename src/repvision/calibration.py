@@ -303,3 +303,7 @@ class CalibrationStore:
                 f"Could not save calibration file {self.path}: {error}"
             ) from error
         return self.path
+
+    def load(self, arm: Arm) -> CalibrationProfile | None:
+        """Return one arm's saved profile when available."""
+        return self.load_all().get(arm)
