@@ -28,6 +28,7 @@ class AppConfig:
     upper_arm_drift_threshold: float = 30.0
     input_size: int = 640
     output_directory: Path = Path("outputs")
+    calibration_sample_target: int = 20
 
     def __post_init__(self) -> None:
         if not self.model_name.strip():
@@ -50,3 +51,5 @@ class AppConfig:
             raise ValueError("upper_arm_drift_threshold must be between 0 and 90")
         if self.input_size < 1:
             raise ValueError("input_size must be positive")
+        if self.calibration_sample_target < 3:
+            raise ValueError("calibration_sample_target must be at least 3")

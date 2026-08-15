@@ -25,6 +25,7 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.upper_arm_drift_threshold == 30.0
     assert config.input_size == 640
     assert config.output_directory == Path("outputs")
+    assert config.calibration_sample_target == 20
 
 
 @pytest.mark.parametrize(
@@ -92,3 +93,9 @@ def test_performance_settings_reject_invalid_values(
 def test_arm_drift_threshold_stays_conservative(threshold: float) -> None:
     with pytest.raises(ValueError, match="between 0 and 90"):
         AppConfig(upper_arm_drift_threshold=threshold)
+
+
+@pytest.mark.parametrize("sample_target", [0, 1, 2])
+def test_calibration_requires_enough_samples(sample_target: int) -> None:
+    with pytest.raises(ValueError, match="calibration_sample_target"):
+        AppConfig(calibration_sample_target=sample_target)
