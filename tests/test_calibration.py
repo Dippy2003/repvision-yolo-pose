@@ -357,3 +357,14 @@ def test_calibration_store_rejects_arm_key_mismatch(tmp_path: Path) -> None:
 
     with pytest.raises(CalibrationStorageError, match="does not match"):
         CalibrationStore(path).load_all()
+
+
+def test_calibration_store_creates_parent_and_saves_profile(tmp_path: Path) -> None:
+    path = tmp_path / "settings" / "calibration.json"
+    store = CalibrationStore(path)
+
+    saved_path = store.save(profile())
+
+    assert saved_path == path
+    assert store.load_all() == {Arm.RIGHT: profile()}
+    assert list(path.parent.glob("*.tmp")) == []

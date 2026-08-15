@@ -3,12 +3,14 @@
 import json
 import os
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from math import isfinite
 from pathlib import Path
 from statistics import median
+from tempfile import NamedTemporaryFile
 
 from repvision.config import AppConfig, Arm
 
@@ -262,3 +264,42 @@ class CalibrationStore:
                 )
             profiles[arm] = parsed
         return profiles
+
+    def save(self, profile: CalibrationProfile) -> Path:
+        """Atomically add or replace one arm's aggregate profile."""
+        profiles = self.load_all()
+        profiles[profile.arm] = profile
+        ordered_profiles = sorted(
+            profiles.items(), key=lambda item: item[0].value
+        )
+        document = {
+            "version": CALIBRATION_SCHEMA_VERSION,
+            "arms": {
+                arm.value: profile_to_dict(saved)
+                for arm, saved in ordered_profiles
+            },
+        }
+        temporary_path: Path | None = None
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                newline="\n",
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                dir=self.path.parent,
+                delete=False,
+            ) as temporary:
+                json.dump(document, temporary, indent=2, sort_keys=True)
+                temporary.write("\n")
+                temporary_path = Path(temporary.name)
+            os.replace(temporary_path, self.path)
+        except OSError as error:
+            if temporary_path is not None:
+                with suppress(OSError):
+                    temporary_path.unlink()
+            raise CalibrationStorageError(
+                f"Could not save calibration file {self.path}: {error}"
+            ) from error
+        return self.path
