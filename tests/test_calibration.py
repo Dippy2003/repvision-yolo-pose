@@ -305,3 +305,17 @@ def test_calibration_store_explains_malformed_json(tmp_path: Path) -> None:
 
     with pytest.raises(CalibrationStorageError, match="Could not read"):
         CalibrationStore(path).load_all()
+
+
+@pytest.mark.parametrize(
+    "document",
+    [[], {}, {"version": 1}, {"version": 1, "arms": [], "extra": True}],
+)
+def test_calibration_store_rejects_invalid_document_structure(
+    tmp_path: Path, document: object
+) -> None:
+    path = tmp_path / "calibration.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(CalibrationStorageError, match="structure"):
+        CalibrationStore(path).load_all()
