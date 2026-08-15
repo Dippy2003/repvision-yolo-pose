@@ -10,6 +10,7 @@ from repvision.calibration import (
     CalibrationProfile,
     CalibrationRangeError,
     CalibrationStorageError,
+    profile_from_dict,
     profile_to_dict,
 )
 from repvision.config import AppConfig, Arm
@@ -227,3 +228,11 @@ def test_profile_serialization_contains_only_aggregate_calibration() -> None:
     }
     assert "frame" not in data
     assert "keypoints" not in data
+
+
+def test_profile_serialization_round_trip() -> None:
+    original = profile()
+
+    restored = profile_from_dict(profile_to_dict(original))
+
+    assert restored == original

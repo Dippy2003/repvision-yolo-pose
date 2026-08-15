@@ -154,3 +154,49 @@ def profile_to_dict(profile: CalibrationProfile) -> dict[str, object]:
         "samples_per_position": profile.samples_per_position,
         "calibrated_at": profile.calibrated_at.isoformat(),
     }
+
+
+def profile_from_dict(data: object) -> CalibrationProfile:
+    """Parse one stored profile through the same runtime validation."""
+    if not isinstance(data, dict):
+        raise CalibrationStorageError("Stored calibration profile must be an object.")
+    expected = {
+        "arm",
+        "curled_angle",
+        "extended_angle",
+        "up_threshold",
+        "down_threshold",
+        "samples_per_position",
+        "calibrated_at",
+    }
+    if set(data) != expected:
+        raise CalibrationStorageError("Stored calibration profile fields are invalid.")
+    try:
+        numeric_fields = (
+            "curled_angle",
+            "extended_angle",
+            "up_threshold",
+            "down_threshold",
+        )
+        numeric_values = []
+        for field in numeric_fields:
+            value = data[field]
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(f"{field} must be numeric")
+            numeric_values.append(float(value))
+        samples = data["samples_per_position"]
+        if isinstance(samples, bool) or not isinstance(samples, int):
+            raise TypeError("samples_per_position must be an integer")
+        calibrated_at = data["calibrated_at"]
+        if not isinstance(calibrated_at, str):
+            raise TypeError("calibrated_at must be text")
+        return CalibrationProfile(
+            Arm(data["arm"]),
+            *numeric_values,
+            samples,
+            datetime.fromisoformat(calibrated_at),
+        )
+    except (TypeError, ValueError) as error:
+        raise CalibrationStorageError(
+            f"Stored calibration profile is invalid: {error}"
+        ) from error
