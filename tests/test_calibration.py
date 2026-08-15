@@ -236,3 +236,20 @@ def test_profile_serialization_round_trip() -> None:
     restored = profile_from_dict(profile_to_dict(original))
 
     assert restored == original
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        [],
+        {},
+        {**profile_to_dict(profile()), "unexpected": True},
+        {**profile_to_dict(profile()), "curled_angle": "forty"},
+        {**profile_to_dict(profile()), "samples_per_position": True},
+        {**profile_to_dict(profile()), "calibrated_at": "not-a-date"},
+    ],
+)
+def test_profile_parser_rejects_malformed_data(data: object) -> None:
+    with pytest.raises(CalibrationStorageError, match="profile"):
+        profile_from_dict(data)
