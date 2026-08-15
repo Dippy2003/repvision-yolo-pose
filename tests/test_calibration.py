@@ -13,6 +13,7 @@ from repvision.calibration import (
     CalibrationRangeError,
     CalibrationStorageError,
     CalibrationStore,
+    apply_calibration,
     default_calibration_path,
     profile_from_dict,
     profile_to_dict,
@@ -421,3 +422,15 @@ def test_calibration_store_resets_only_selected_arm(tmp_path: Path) -> None:
     assert store.reset(Arm.RIGHT)
     assert store.load_all() == {Arm.LEFT: left}
     assert not store.reset(Arm.RIGHT)
+
+
+def test_apply_calibration_returns_updated_runtime_config() -> None:
+    config = AppConfig(selected_arm=Arm.RIGHT, input_size=480)
+
+    updated = apply_calibration(config, profile())
+
+    assert updated.up_angle_threshold == 52.0
+    assert updated.down_angle_threshold == 154.0
+    assert updated.input_size == 480
+    assert config.up_angle_threshold == 50.0
+    assert config.down_angle_threshold == 155.0

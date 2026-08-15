@@ -4,7 +4,7 @@ import json
 import os
 from collections.abc import Mapping
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 from math import isfinite
@@ -318,3 +318,19 @@ class CalibrationStore:
         if removed:
             self._write_profiles(profiles)
         return removed
+
+
+def apply_calibration(
+    config: AppConfig, profile: CalibrationProfile
+) -> AppConfig:
+    """Return runtime settings with one matching arm's thresholds applied."""
+    if profile.arm is not config.selected_arm:
+        raise CalibrationError(
+            f"Cannot apply {profile.arm.value} calibration while "
+            f"{config.selected_arm.value} arm is selected."
+        )
+    return replace(
+        config,
+        up_angle_threshold=profile.up_threshold,
+        down_angle_threshold=profile.down_threshold,
+    )
