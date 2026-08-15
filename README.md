@@ -6,7 +6,8 @@ and basic form feedback using Ultralytics YOLO Pose and OpenCV.
 It provides validated runtime configuration, safe OpenCV camera access, YOLO
 pose inference, deterministic primary-person selection, selected-arm keypoint
 extraction, elbow-angle smoothing, confirmed repetition counting, conservative
-form feedback, a live overlay, keyboard controls, and aggregate session logs.
+form feedback, personalized movement calibration, a live overlay, keyboard
+controls, and aggregate session logs.
 
 ## Main features
 
@@ -15,6 +16,7 @@ form feedback, a live overlay, keyboard controls, and aggregate session logs.
 - Confidence filtering, robust angle smoothing, and confirmed-frame counting
 - Readable live feedback, progress, repetition count, movement stage, and FPS
 - Pause, reset, arm-switch, keyboard quit, and window-close handling
+- Separate, privacy-safe movement calibration profiles for each arm
 - Privacy-safe CSV summaries without saved webcam images or video
 
 ## Technology stack
@@ -59,6 +61,7 @@ movement responsibilities. `frame_source.py` defines the shared input boundary;
 `angles.py`, `rep_counter.py`, and `form_checker.py` contain independently
 testable movement rules. `renderer.py` draws the view, while `session.py` saves
 aggregate-only results. `workout.py` coordinates those components,
+`calibration.py` derives and safely stores personalized movement thresholds,
 `benchmark.py` measures scalar pipeline latency, and `app.py` provides the
 command-line entry point.
 
@@ -154,8 +157,21 @@ python -m repvision.app --help
 
 Defaults live in the frozen `AppConfig` dataclass. They include camera and arm
 selection, the model name, keypoint confidence, movement thresholds, temporal
-filtering, inference size, and generated-output location. Invalid ranges fail
-early with focused error messages.
+filtering, inference size, calibration sample count, minimum movement range,
+threshold margin, and generated-output location. Invalid ranges fail early
+with focused error messages.
+
+The calibration engine collects a bounded number of reliable elbow angles at
+the curled and extended positions. It uses each position's median, rejects an
+unsafe movement range, and derives thresholds inside the measured endpoints.
+Profiles for the left and right arms remain separate.
+
+Calibration profiles use a versioned JSON document stored under the current
+user's local application-data directory (`RepVision/calibration.json` on
+Windows). A profile contains only the arm, aggregate endpoint angles, derived
+thresholds, sample count, and timestamp. It never contains frames, video,
+keypoints, or sample history. The guided camera workflow that creates and
+resets these profiles will be added to the command-line interface next.
 
 ## Pose detection
 
@@ -231,7 +247,7 @@ biomechanical assessment.
 
 ## Future improvements
 
-- Optional calibration for different users and camera positions
+- Camera-guided controls for creating and resetting calibration profiles
 - Additional exercises built on separate, tested movement state machines
 - A session-history view using the existing aggregate CSV data
 - Measured CPU performance profiles across supported model and input sizes
