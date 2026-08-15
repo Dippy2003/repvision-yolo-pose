@@ -111,3 +111,13 @@ def test_calibration_collector_rejects_out_of_range_angle(angle: float) -> None:
 
     with pytest.raises(ValueError, match="between 0 and 180"):
         collector.add(CalibrationPosition.EXTENDED, angle)
+
+
+def test_calibration_collector_bounds_retained_history() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+
+    for angle in (160.0, 161.0, 162.0, 170.0):
+        count = collector.add(CalibrationPosition.EXTENDED, angle)
+
+    assert count == 3
+    assert collector.sample_count(CalibrationPosition.EXTENDED) == 3
