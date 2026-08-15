@@ -136,3 +136,27 @@ def test_calibration_collector_reports_endpoint_readiness() -> None:
         collector.add(CalibrationPosition.CURLED, angle)
 
     assert collector.complete
+
+
+def test_calibration_profile_uses_endpoint_medians_and_margin() -> None:
+    collector = CalibrationCollector(
+        AppConfig(
+            calibration_sample_target=3,
+            calibration_threshold_margin=10.0,
+        ),
+        Arm.LEFT,
+    )
+    for angle in (160.0, 164.0, 170.0):
+        collector.add(CalibrationPosition.EXTENDED, angle)
+    for angle in (30.0, 42.0, 50.0):
+        collector.add(CalibrationPosition.CURLED, angle)
+    timestamp = datetime(2026, 8, 15, 10, tzinfo=UTC)
+
+    result = collector.build_profile(timestamp)
+
+    assert result.arm is Arm.LEFT
+    assert result.extended_angle == 164.0
+    assert result.curled_angle == 42.0
+    assert result.up_threshold == 52.0
+    assert result.down_threshold == 154.0
+    assert result.calibrated_at == timestamp

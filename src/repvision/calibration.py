@@ -1,9 +1,10 @@
 """Personal arm-range calibration and local profile persistence."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from math import isfinite
+from statistics import median
 
 from repvision.config import AppConfig, Arm
 
@@ -106,3 +107,31 @@ class CalibrationCollector:
     def complete(self) -> bool:
         """Return whether both endpoint positions are ready."""
         return all(self.position_ready(position) for position in CalibrationPosition)
+
+    def build_profile(
+        self, calibrated_at: datetime | None = None
+    ) -> CalibrationProfile:
+        """Derive conservative thresholds from robust endpoint medians."""
+        if not self.complete:
+            raise CalibrationError(
+                "Calibration requires complete extended and curled samples."
+            )
+        extended = float(median(self._samples[CalibrationPosition.EXTENDED]))
+        curled = float(median(self._samples[CalibrationPosition.CURLED]))
+        movement_range = extended - curled
+        if movement_range < self.config.calibration_minimum_range:
+            raise CalibrationRangeError(
+                "Calibration movement range is too small "
+                f"({movement_range:.1f} degrees; minimum "
+                f"{self.config.calibration_minimum_range:.1f})."
+            )
+        margin = self.config.calibration_threshold_margin
+        return CalibrationProfile(
+            self.arm,
+            curled,
+            extended,
+            curled + margin,
+            extended - margin,
+            self.config.calibration_sample_target,
+            datetime.now(UTC) if calibrated_at is None else calibrated_at,
+        )
