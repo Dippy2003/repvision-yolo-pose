@@ -135,3 +135,9 @@ class CalibrationCollector:
             self.config.calibration_sample_target,
             datetime.now(UTC) if calibrated_at is None else calibrated_at,
         )
+
+    def reset(self, position: CalibrationPosition | None = None) -> None:
+        """Clear one endpoint or restart all calibration samples."""
+        positions = tuple(CalibrationPosition) if position is None else (position,)
+        for selected in positions:
+            self._samples[selected].clear()

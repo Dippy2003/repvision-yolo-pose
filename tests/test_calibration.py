@@ -195,3 +195,18 @@ def test_calibration_profile_default_timestamp_is_timezone_aware() -> None:
     result = collector.build_profile()
 
     assert result.calibrated_at.utcoffset() is not None
+
+
+def test_calibration_collector_resets_one_or_both_positions() -> None:
+    collector = CalibrationCollector(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    collector.add(CalibrationPosition.EXTENDED, 160.0)
+    collector.add(CalibrationPosition.CURLED, 40.0)
+
+    collector.reset(CalibrationPosition.EXTENDED)
+
+    assert collector.sample_count(CalibrationPosition.EXTENDED) == 0
+    assert collector.sample_count(CalibrationPosition.CURLED) == 1
+
+    collector.reset()
+
+    assert collector.sample_count(CalibrationPosition.CURLED) == 0
