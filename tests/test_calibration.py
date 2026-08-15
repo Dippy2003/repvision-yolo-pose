@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +11,7 @@ from repvision.calibration import (
     CalibrationProfile,
     CalibrationRangeError,
     CalibrationStorageError,
+    default_calibration_path,
     profile_from_dict,
     profile_to_dict,
 )
@@ -253,3 +255,11 @@ def test_profile_serialization_round_trip() -> None:
 def test_profile_parser_rejects_malformed_data(data: object) -> None:
     with pytest.raises(CalibrationStorageError, match="profile"):
         profile_from_dict(data)
+
+
+def test_default_calibration_path_uses_windows_local_app_data() -> None:
+    path = default_calibration_path(
+        {"LOCALAPPDATA": r"C:\Users\Test\AppData\Local"}
+    )
+
+    assert path == Path(r"C:\Users\Test\AppData\Local\RepVision\calibration.json")

@@ -1,14 +1,33 @@
 """Personal arm-range calibration and local profile persistence."""
 
+import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from math import isfinite
+from pathlib import Path
 from statistics import median
 
 from repvision.config import AppConfig, Arm
 
 CALIBRATION_SCHEMA_VERSION = 1
+
+
+def default_calibration_path(
+    environment: Mapping[str, str] | None = None,
+    home: Path | None = None,
+) -> Path:
+    """Return a user-local configuration path without creating it."""
+    values = os.environ if environment is None else environment
+    local_app_data = values.get("LOCALAPPDATA")
+    if local_app_data:
+        return Path(local_app_data) / "RepVision" / "calibration.json"
+    xdg_config = values.get("XDG_CONFIG_HOME")
+    if xdg_config:
+        return Path(xdg_config) / "repvision" / "calibration.json"
+    home_directory = Path.home() if home is None else home
+    return home_directory / ".config" / "repvision" / "calibration.json"
 
 
 class CalibrationError(RuntimeError):
