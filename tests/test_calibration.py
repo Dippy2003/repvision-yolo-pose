@@ -368,3 +368,14 @@ def test_calibration_store_creates_parent_and_saves_profile(tmp_path: Path) -> N
     assert saved_path == path
     assert store.load_all() == {Arm.RIGHT: profile()}
     assert list(path.parent.glob("*.tmp")) == []
+
+
+def test_calibration_store_preserves_profiles_for_both_arms(tmp_path: Path) -> None:
+    store = CalibrationStore(tmp_path / "calibration.json")
+    right = profile()
+    left = replace(profile(), arm=Arm.LEFT, curled_angle=45.0, up_threshold=55.0)
+
+    store.save(right)
+    store.save(left)
+
+    assert store.load_all() == {Arm.LEFT: left, Arm.RIGHT: right}
