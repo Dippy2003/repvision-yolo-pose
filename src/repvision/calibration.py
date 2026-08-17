@@ -429,3 +429,14 @@ def load_calibrated_config(
     if profile is None:
         return config, None
     return apply_calibration(config, profile), profile
+
+
+def format_calibration_profile(profile: CalibrationProfile) -> str:
+    """Format one saved profile for a concise command-line report."""
+    return (
+        f"arm={profile.arm.value}, curled={profile.curled_angle:.1f}, "
+        f"extended={profile.extended_angle:.1f}, "
+        f"up={profile.up_threshold:.1f}, down={profile.down_threshold:.1f}, "
+        f"samples={profile.samples_per_position}, "
+        f"calibrated={profile.calibrated_at.isoformat()}"
+    )

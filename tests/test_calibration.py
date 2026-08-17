@@ -17,6 +17,7 @@ from repvision.calibration import (
     GuidedCalibration,
     apply_calibration,
     default_calibration_path,
+    format_calibration_profile,
     load_calibrated_config,
     profile_from_dict,
     profile_to_dict,
@@ -547,3 +548,10 @@ def test_load_calibrated_config_preserves_defaults_when_absent(
 
     assert config is original
     assert loaded is None
+
+
+def test_format_calibration_profile_reports_aggregate_values() -> None:
+    assert format_calibration_profile(profile()) == (
+        "arm=right, curled=42.0, extended=164.0, up=52.0, down=154.0, "
+        "samples=20, calibrated=2026-08-15T09:30:00+00:00"
+    )
