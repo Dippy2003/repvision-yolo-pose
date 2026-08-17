@@ -14,6 +14,7 @@ from repvision.calibration import (
     CalibrationStage,
     CalibrationStorageError,
     CalibrationStore,
+    GuidedCalibration,
     apply_calibration,
     default_calibration_path,
     load_calibrated_config,
@@ -110,6 +111,17 @@ def test_calibration_collector_retains_valid_endpoint_angles() -> None:
     assert collector.add(CalibrationPosition.EXTENDED, 162.0) == 2
     assert collector.sample_count(CalibrationPosition.EXTENDED) == 2
     assert collector.sample_count(CalibrationPosition.CURLED) == 0
+
+
+def test_guided_calibration_waits_for_explicit_capture() -> None:
+    workflow = GuidedCalibration(AppConfig(), Arm.LEFT)
+
+    assert workflow.arm is Arm.LEFT
+    assert workflow.stage is CalibrationStage.READY_EXTENDED
+
+    workflow.begin_capture()
+
+    assert workflow.stage is CalibrationStage.CAPTURING_EXTENDED
 
 
 @pytest.mark.parametrize("angle", [None, float("nan"), float("inf")])

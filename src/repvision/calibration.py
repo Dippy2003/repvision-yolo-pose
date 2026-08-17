@@ -175,6 +175,28 @@ class CalibrationCollector:
             self._samples[selected].clear()
 
 
+class GuidedCalibration:
+    """Coordinate explicit endpoint capture without camera dependencies."""
+
+    def __init__(self, config: AppConfig, arm: Arm) -> None:
+        self.collector = CalibrationCollector(config, arm)
+        self.stage = CalibrationStage.READY_EXTENDED
+
+    @property
+    def arm(self) -> Arm:
+        """Return the arm being calibrated."""
+        return self.collector.arm
+
+    def begin_capture(self) -> None:
+        """Start sampling the endpoint currently requested from the user."""
+        transitions = {
+            CalibrationStage.READY_EXTENDED: CalibrationStage.CAPTURING_EXTENDED,
+            CalibrationStage.READY_CURLED: CalibrationStage.CAPTURING_CURLED,
+        }
+        if self.stage in transitions:
+            self.stage = transitions[self.stage]
+
+
 def profile_to_dict(profile: CalibrationProfile) -> dict[str, object]:
     """Serialize one profile without any frame or raw keypoint data."""
     return {
