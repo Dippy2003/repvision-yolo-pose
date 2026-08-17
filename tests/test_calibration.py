@@ -16,6 +16,7 @@ from repvision.calibration import (
     CalibrationStore,
     GuidedCalibration,
     apply_calibration,
+    calibrated_config_for_arm,
     default_calibration_path,
     format_calibration_profile,
     load_calibrated_config,
@@ -555,3 +556,19 @@ def test_format_calibration_profile_reports_aggregate_values() -> None:
         "arm=right, curled=42.0, extended=164.0, up=52.0, down=154.0, "
         "samples=20, calibrated=2026-08-15T09:30:00+00:00"
     )
+
+
+def test_calibrated_config_for_arm_uses_matching_profile() -> None:
+    result = calibrated_config_for_arm(AppConfig(), Arm.RIGHT, {Arm.RIGHT: profile()})
+
+    assert result.selected_arm is Arm.RIGHT
+    assert result.up_angle_threshold == 52.0
+    assert result.down_angle_threshold == 154.0
+
+
+def test_calibrated_config_for_arm_uses_defaults_for_other_arm() -> None:
+    result = calibrated_config_for_arm(AppConfig(), Arm.LEFT, {Arm.RIGHT: profile()})
+
+    assert result.selected_arm is Arm.LEFT
+    assert result.up_angle_threshold == 50.0
+    assert result.down_angle_threshold == 155.0

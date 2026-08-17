@@ -440,3 +440,14 @@ def format_calibration_profile(profile: CalibrationProfile) -> str:
         f"samples={profile.samples_per_position}, "
         f"calibrated={profile.calibrated_at.isoformat()}"
     )
+
+
+def calibrated_config_for_arm(
+    base_config: AppConfig,
+    arm: Arm,
+    profiles: Mapping[Arm, CalibrationProfile],
+) -> AppConfig:
+    """Select an arm and apply only its matching profile when available."""
+    selected = replace(base_config, selected_arm=arm)
+    profile = profiles.get(arm)
+    return selected if profile is None else apply_calibration(selected, profile)
