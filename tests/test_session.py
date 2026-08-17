@@ -148,6 +148,32 @@ def test_session_logger_appends_without_repeating_header(tmp_path) -> None:
     assert ",left,20.00,4,1,2.00" in lines[2]
 
 
+def test_session_logger_loads_saved_aggregate_summaries(tmp_path) -> None:
+    logger = SessionLogger(tmp_path)
+    saved = SessionSummary(
+        datetime(2026, 8, 17, 12), "bicep_curl", Arm.RIGHT, 20, 5, 1, 2.0
+    )
+    logger.save(saved)
+
+    assert logger.load() == (saved,)
+
+
+def test_session_logger_loads_empty_history_before_first_workout(tmp_path) -> None:
+    assert SessionLogger(tmp_path).load() == ()
+
+
+def test_session_logger_rejects_invalid_history_row(tmp_path) -> None:
+    logger = SessionLogger(tmp_path)
+    logger.path.write_text(
+        ",".join(SESSION_HEADERS)
+        + "\n2026-08-17,bicep_curl,right,20,not-a-number,0,\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SessionLogError, match="row 2"):
+        logger.load()
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [

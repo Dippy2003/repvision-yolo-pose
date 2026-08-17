@@ -166,6 +166,33 @@ class SessionLogger:
             ) from error
         return self.path
 
+    def load(self) -> tuple[SessionSummary, ...]:
+        """Load validated aggregate summaries without modifying the log."""
+        if not self.path.exists():
+            return ()
+        try:
+            with self.path.open(encoding="utf-8", newline="") as file:
+                reader = csv.DictReader(file)
+                if tuple(reader.fieldnames or ()) != SESSION_HEADERS:
+                    raise SessionLogError(
+                        f"Existing session log has an incompatible header: {self.path}"
+                    )
+                summaries = []
+                for row_number, row in enumerate(reader, start=2):
+                    try:
+                        summaries.append(SessionSummary.from_csv_row(row))
+                    except (TypeError, ValueError) as error:
+                        raise SessionLogError(
+                            f"Invalid aggregate session row {row_number}: {error}"
+                        ) from error
+        except SessionLogError:
+            raise
+        except (OSError, UnicodeError) as error:
+            raise SessionLogError(
+                f"Could not read aggregate session log: {error}"
+            ) from error
+        return tuple(summaries)
+
     def _include_header(self) -> bool:
         if not self.path.exists() or self.path.stat().st_size == 0:
             return True
