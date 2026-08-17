@@ -6,7 +6,13 @@ import pytest
 from repvision.config import Arm
 from repvision.form_checker import FeedbackMessage, FormFeedback
 from repvision.pose_detector import ArmLandmarks, Landmark, Point2D
-from repvision.renderer import OverlayData, Renderer, curl_progress, overlay_lines
+from repvision.renderer import (
+    OverlayData,
+    Renderer,
+    curl_progress,
+    overlay_lines,
+    side_panel_canvas,
+)
 from repvision.rep_counter import MovementStage
 
 
@@ -41,6 +47,24 @@ def test_curl_progress_rejects_invalid_thresholds(
 ) -> None:
     with pytest.raises(ValueError, match="thresholds"):
         curl_progress(90.0, up_threshold, down_threshold)
+
+
+def test_side_panel_canvas_preserves_complete_camera_frame() -> None:
+    frame = np.full((120, 200, 3), 75, dtype=np.uint8)
+
+    canvas, panel_left = side_panel_canvas(frame, panel_width=80)
+
+    assert panel_left == 200
+    assert canvas.shape == (120, 280, 3)
+    np.testing.assert_array_equal(canvas[:, :panel_left], frame)
+    assert np.all(canvas[:, panel_left:] == 20)
+
+
+def test_side_panel_canvas_requires_positive_width() -> None:
+    frame = np.zeros((120, 200, 3), dtype=np.uint8)
+
+    with pytest.raises(ValueError, match="panel_width"):
+        side_panel_canvas(frame, panel_width=0)
 
 
 def test_overlay_data_keeps_workout_state_typed() -> None:

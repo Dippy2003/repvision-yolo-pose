@@ -10,6 +10,26 @@ from repvision.form_checker import FormFeedback
 from repvision.pose_detector import ArmLandmarks, Landmark
 from repvision.rep_counter import MovementStage
 
+SIDE_PANEL_WIDTH = 360
+
+
+def side_panel_canvas(
+    frame: Frame, panel_width: int = SIDE_PANEL_WIDTH
+) -> tuple[Frame, int]:
+    """Place a dark information panel beside the complete camera frame."""
+    if panel_width < 1:
+        raise ValueError("panel_width must be positive")
+    canvas = cv2.copyMakeBorder(
+        frame,
+        0,
+        0,
+        0,
+        panel_width,
+        cv2.BORDER_CONSTANT,
+        value=(20, 20, 20),
+    )
+    return canvas, frame.shape[1]
+
 
 @dataclass(frozen=True, slots=True)
 class OverlayData:
