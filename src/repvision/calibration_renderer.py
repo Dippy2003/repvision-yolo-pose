@@ -9,7 +9,7 @@ from repvision.calibration import CalibrationStage
 from repvision.camera import Frame
 from repvision.config import Arm
 from repvision.pose_detector import ArmLandmarks, PoseStatus
-from repvision.renderer import draw_arm
+from repvision.renderer import draw_arm, side_panel_canvas
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,14 +63,13 @@ class CalibrationRenderer:
         landmarks: ArmLandmarks | None = None,
     ) -> Frame:
         """Return a frame containing instructions and capture progress."""
-        canvas = frame.copy()
+        canvas, panel_left = side_panel_canvas(frame)
         draw_arm(canvas, landmarks)
-        panel_width = min(460, canvas.shape[1])
-        cv2.rectangle(canvas, (0, 0), (panel_width, 190), (20, 20, 20), -1)
+        text_left = panel_left + 16
         cv2.putText(
             canvas,
             "RepVision | Calibration",
-            (16, 30),
+            (text_left, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (255, 255, 255),
@@ -81,7 +80,7 @@ class CalibrationRenderer:
             cv2.putText(
                 canvas,
                 line,
-                (16, 58 + index * 25),
+                (text_left, 58 + index * 25),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 (235, 235, 235),
@@ -91,7 +90,7 @@ class CalibrationRenderer:
         cv2.putText(
             canvas,
             "SPACE Confirm | R Restart | Q Cancel",
-            (12, max(18, canvas.shape[0] - 12)),
+            (panel_left + 12, max(18, canvas.shape[0] - 12)),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
             (255, 255, 255),

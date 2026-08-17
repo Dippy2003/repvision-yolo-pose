@@ -95,8 +95,9 @@ def test_calibration_renderer_adds_guidance_without_mutating_frame() -> None:
     rendered = CalibrationRenderer().render(frame, data)
 
     np.testing.assert_array_equal(frame, original)
-    assert rendered.shape == frame.shape
-    assert np.any(rendered != original)
+    assert rendered.shape == (300, 860, 3)
+    np.testing.assert_array_equal(rendered[:, :500], original)
+    assert np.any(rendered[:, 500:] != 20)
 
 
 def test_calibration_renderer_displays_controls() -> None:
