@@ -1,3 +1,5 @@
+import pytest
+
 from repvision.calibration import CalibrationStage
 from repvision.calibration_renderer import CalibrationOverlay, calibration_lines
 from repvision.config import Arm
@@ -69,4 +71,3 @@ def test_calibration_overlay_rejects_invalid_angle(angle: float) -> None:
             20,
             PoseStatus.TRACKING,
         )
-import pytest
