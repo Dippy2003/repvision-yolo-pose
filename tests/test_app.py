@@ -48,6 +48,12 @@ def test_calibration_commands_are_mutually_exclusive() -> None:
         build_parser().parse_args(["--calibrate", "--calibration-status"])
 
 
+def test_cli_can_disable_saved_calibration_for_one_run() -> None:
+    args = build_parser().parse_args(["--no-calibration"])
+
+    assert args.no_calibration
+
+
 def test_calibration_status_reports_missing_selected_arm(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

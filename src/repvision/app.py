@@ -115,6 +115,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=defaults.calibration_sample_target,
         help="reliable frames captured at each calibration endpoint",
     )
+    parser.add_argument(
+        "--no-calibration",
+        action="store_true",
+        help="ignore saved calibration profiles for this run",
+    )
     return parser
 
 
