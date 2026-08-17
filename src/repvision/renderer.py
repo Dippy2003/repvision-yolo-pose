@@ -11,6 +11,11 @@ from repvision.pose_detector import ArmLandmarks, Landmark
 from repvision.rep_counter import MovementStage
 
 SIDE_PANEL_WIDTH = 360
+PROGRESS_TOP = 252
+PROGRESS_BOTTOM = 264
+CONTROLS_LINE_HEIGHT = 24
+CONTROLS_BOTTOM_MARGIN = 38
+CONTROLS_MINIMUM_BASELINE = PROGRESS_BOTTOM + 20
 
 
 def side_panel_canvas(
@@ -88,12 +93,16 @@ class Renderer:
 
     @staticmethod
     def _draw_controls(canvas: Frame, panel_left: int) -> None:
-        """Show the keyboard controls on every workout frame."""
+        """Show the keyboard controls without overdrawing the progress bar."""
+        first_baseline = max(
+            CONTROLS_MINIMUM_BASELINE,
+            canvas.shape[0] - CONTROLS_BOTTOM_MARGIN,
+        )
         for index, text in enumerate(("Q Quit | R Reset", "P Pause | L Switch arm")):
             cv2.putText(
                 canvas,
                 text,
-                (panel_left + 16, max(18, canvas.shape[0] - 38 + index * 24)),
+                (panel_left + 16, first_baseline + index * CONTROLS_LINE_HEIGHT),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 (255, 255, 255),
@@ -131,7 +140,7 @@ class Renderer:
         """Draw a clamped curl progress bar when an angle is available."""
         left = panel_left + 16
         right = canvas.shape[1] - 16
-        top, bottom = 252, 264
+        top, bottom = PROGRESS_TOP, PROGRESS_BOTTOM
         cv2.rectangle(canvas, (left, top), (right, bottom), (90, 90, 90), 1)
         if progress is None:
             return
