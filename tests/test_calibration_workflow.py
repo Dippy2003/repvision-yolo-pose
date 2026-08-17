@@ -162,3 +162,36 @@ def test_guided_camera_calibration_cancels_without_profile(tmp_path: Path) -> No
     assert camera.released
     assert display.closed
     assert not store.path.exists()
+
+
+def test_guided_camera_calibration_restart_discards_prior_samples(
+    tmp_path: Path,
+) -> None:
+    display = FakeDisplay(
+        [
+            KeyAction.CONFIRM,
+            KeyAction.RESET,
+            KeyAction.CONFIRM,
+            KeyAction.NONE,
+            KeyAction.NONE,
+            KeyAction.CONFIRM,
+            KeyAction.NONE,
+            KeyAction.NONE,
+        ]
+    )
+    angles = iter([None, 175.0, None, 161.0, 162.0, 163.0, 30.0, 35.0, 40.0])
+
+    with patch(
+        "repvision.calibration_workflow.calibration_angle",
+        side_effect=lambda *_args: next(angles),
+    ):
+        result = run_guided_calibration(
+            AppConfig(calibration_sample_target=3),
+            store=CalibrationStore(tmp_path / "calibration.json"),
+            camera_factory=FakeCamera,
+            detector_factory=FakeDetector,
+            display_factory=lambda: display,
+            renderer_factory=FakeRenderer,
+        )
+
+    assert result.extended_angle == 162.0
