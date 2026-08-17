@@ -64,6 +64,8 @@ movement responsibilities. `frame_source.py` defines the shared input boundary;
 testable movement rules. `renderer.py` draws the view, while `session.py` saves
 aggregate-only results. `workout.py` coordinates those components,
 `calibration.py` derives and safely stores personalized movement thresholds,
+`calibration_workflow.py` owns its camera-guided capture loop, `history.py`
+summarizes existing aggregate logs, `audio.py` emits opt-in local cues,
 `benchmark.py` measures scalar pipeline latency, and `app.py` provides the
 command-line entry point.
 
