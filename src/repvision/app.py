@@ -5,6 +5,11 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from repvision.benchmark import BenchmarkError, format_benchmark, run_benchmark
+from repvision.calibration import (
+    CalibrationStorageError,
+    CalibrationStore,
+    format_calibration_profile,
+)
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
@@ -156,6 +161,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         config = config_from_args(args)
     except ValueError as error:
         parser.error(str(error))
+    calibration_store = CalibrationStore(args.calibration_file)
+    if args.calibration_status:
+        try:
+            profile = calibration_store.load(config.selected_arm)
+        except CalibrationStorageError as error:
+            parser.error(str(error))
+        if profile is None:
+            print(
+                f"No calibration saved for {config.selected_arm.value} arm "
+                f"({calibration_store.path})."
+            )
+        else:
+            print(
+                "Calibration: "
+                f"{format_calibration_profile(profile)} "
+                f"(file={calibration_store.path})."
+            )
+        return 0
     if args.check_camera:
         try:
             frame_shape = check_camera(config)

@@ -46,6 +46,18 @@ def test_calibration_commands_are_mutually_exclusive() -> None:
         build_parser().parse_args(["--calibrate", "--calibration-status"])
 
 
+def test_calibration_status_reports_missing_selected_arm(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "calibration.json"
+
+    assert main(["--calibration-status", "--calibration-file", str(path)]) == 0
+
+    output = capsys.readouterr().out
+    assert "No calibration saved for right arm" in output
+    assert str(path) in output
+
+
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     with patch("repvision.app.run_workout", return_value="outputs/sessions.csv"):
         assert main([]) == 0
