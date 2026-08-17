@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import pytest
 
+from repvision.calibration import CalibrationProfile
 from repvision.camera import Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
@@ -75,6 +76,23 @@ def test_workout_engine_pause_resets_fps_baseline() -> None:
 
     assert engine.state.paused
     assert engine.fps_meter.fps == 0.0
+
+
+def test_workout_engine_applies_initial_arm_calibration() -> None:
+    profile = CalibrationProfile(
+        Arm.RIGHT,
+        42.0,
+        164.0,
+        52.0,
+        154.0,
+        20,
+        datetime.now().astimezone(),
+    )
+
+    engine = WorkoutEngine(AppConfig(), {Arm.RIGHT: profile})
+
+    assert engine.config.up_angle_threshold == 52.0
+    assert engine.config.down_angle_threshold == 154.0
 
 
 def test_workout_engine_ignores_observation_for_wrong_arm() -> None:

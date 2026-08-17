@@ -1,13 +1,14 @@
 """State and orchestration for a live local workout."""
 
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from time import monotonic
 
+from repvision.calibration import CalibrationProfile, calibrated_config_for_arm
 from repvision.camera import Camera, Frame
 from repvision.config import AppConfig, Arm
 from repvision.controls import KeyAction
@@ -63,11 +64,19 @@ class FrameAnalysis:
 class WorkoutEngine:
     """Process pose observations independently from camera and display access."""
 
-    def __init__(self, config: AppConfig) -> None:
-        self.config = config
-        self.state = WorkoutState(config.selected_arm)
-        self.tracker = CurlTracker(config)
-        self.form_checker = FormChecker(config)
+    def __init__(
+        self,
+        config: AppConfig,
+        calibration_profiles: Mapping[Arm, CalibrationProfile] | None = None,
+    ) -> None:
+        self.base_config = config
+        self.calibration_profiles = dict(calibration_profiles or {})
+        self.config = calibrated_config_for_arm(
+            config, config.selected_arm, self.calibration_profiles
+        )
+        self.state = WorkoutState(self.config.selected_arm)
+        self.tracker = CurlTracker(self.config)
+        self.form_checker = FormChecker(self.config)
         self.fps_meter = FpsMeter()
 
     def process(self, observation: PoseObservation, timestamp: float) -> FrameAnalysis:
@@ -100,7 +109,14 @@ class WorkoutEngine:
     def switch_arm(self) -> None:
         """Switch the arm and clear measurements that cannot span arms."""
         self.state.switch_arm()
-        self.reset_measurements()
+        self.config = calibrated_config_for_arm(
+            self.base_config,
+            self.state.arm,
+            self.calibration_profiles,
+        )
+        self.tracker = CurlTracker(self.config)
+        self.form_checker = FormChecker(self.config)
+        self.fps_meter.reset()
 
     def toggle_pause(self) -> None:
         """Pause or resume without including idle time in the FPS estimate."""
@@ -127,12 +143,13 @@ def run_workout(
     renderer_factory: Callable[[], Renderer] = Renderer,
     clock: Callable[[], float] = monotonic,
     wall_clock: Callable[[], datetime] = datetime.now,
+    calibration_profiles: Mapping[Arm, CalibrationProfile] | None = None,
 ) -> Path:
     """Run the local camera loop until Q and save one aggregate summary."""
     detector = detector_factory(config)
     display = display_factory()
     renderer = renderer_factory()
-    engine = WorkoutEngine(config)
+    engine = WorkoutEngine(config, calibration_profiles)
     started_at = wall_clock()
     started_monotonic = clock()
     accumulator = SessionAccumulator(started_at, started_monotonic)
