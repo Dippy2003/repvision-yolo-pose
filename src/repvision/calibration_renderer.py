@@ -1,6 +1,7 @@
 """Readable overlay for camera-guided movement calibration."""
 
 from dataclasses import dataclass
+from math import isfinite
 
 from repvision.calibration import CalibrationStage
 from repvision.config import Arm
@@ -17,6 +18,16 @@ class CalibrationOverlay:
     sample_count: int
     sample_target: int
     pose_status: PoseStatus
+
+    def __post_init__(self) -> None:
+        if self.sample_target < 1:
+            raise ValueError("sample_target must be positive")
+        if not 0 <= self.sample_count <= self.sample_target:
+            raise ValueError("sample_count must be between zero and sample_target")
+        if self.angle is not None and (
+            not isfinite(self.angle) or not 0.0 <= self.angle <= 180.0
+        ):
+            raise ValueError("angle must be unavailable or between 0 and 180")
 
 
 def calibration_lines(data: CalibrationOverlay) -> tuple[str, ...]:
