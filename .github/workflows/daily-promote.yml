@@ -1,0 +1,33 @@
+name: Daily commit promotion
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Promote a batch of commits
+        env:
+          BATCH: 7
+        run: |
+          git fetch origin dev:dev
+          NEXT=$(git rev-list --reverse --topo-order main..dev | head -n "$BATCH" | tail -n 1)
+          if [ -z "$NEXT" ]; then
+            echo "Nothing left to promote."
+            exit 0
+          fi
+          echo "Promoting through $NEXT"
+          git merge --ff-only "$NEXT"
+          git push origin main
