@@ -17,6 +17,8 @@ controls, and aggregate session logs.
 - Readable live feedback, progress, repetition count, movement stage, and FPS
 - Pause, reset, arm-switch, keyboard quit, and window-close handling
 - Separate, privacy-safe movement calibration profiles for each arm
+- Optional local audio cues for completed repetitions and warning episodes
+- Aggregate workout-history totals and recent-session reporting
 - Privacy-safe CSV summaries without saved webcam images or video
 
 ## Technology stack
@@ -88,6 +90,13 @@ are:
 - `R`: reset the current counter and aggregate statistics
 - `P`: pause or resume camera inference
 - `L`: switch between left-arm and right-arm tracking
+
+Add a local terminal-bell cue for completed repetitions and new form-warning
+episodes:
+
+```console
+repvision --audio-cues
+```
 
 Open the configured camera, read exactly one frame, release it, and exit:
 
@@ -161,17 +170,51 @@ filtering, inference size, calibration sample count, minimum movement range,
 threshold margin, and generated-output location. Invalid ranges fail early
 with focused error messages.
 
+Create a personalized profile for the selected arm:
+
+```console
+repvision --calibrate --arm right --confidence 0.3
+```
+
+The camera window guides the complete process:
+
+1. Stand side-on with the selected shoulder, elbow, and wrist visible.
+2. Fully extend the arm and press `Space`.
+3. Hold still until the extended sample counter reaches its target.
+4. Fully curl the arm and press `Space` again.
+5. Hold still until the curled sample counter reaches its target.
+
+Press `R` to restart both endpoint captures or `Q` to cancel without saving.
+The default target is 20 reliable frames per endpoint. It can be adjusted for
+diagnosis with `--calibration-samples`, but values below three are rejected.
+
+Inspect or remove one arm's profile without opening the camera:
+
+```console
+repvision --calibration-status --arm right
+repvision --reset-calibration --arm right
+```
+
+Saved profiles apply automatically during pose checks, benchmarks, videos, and
+live workouts. The workout window and pose-check output show whether thresholds
+are `PERSONALIZED` or `DEFAULT`. For a one-run comparison that ignores profiles:
+
+```console
+repvision --no-calibration
+```
+
 The calibration engine collects a bounded number of reliable elbow angles at
 the curled and extended positions. It uses each position's median, rejects an
 unsafe movement range, and derives thresholds inside the measured endpoints.
-Profiles for the left and right arms remain separate.
+Profiles for the left and right arms remain separate, including when `L`
+switches arms during a workout.
 
 Calibration profiles use a versioned JSON document stored under the current
 user's local application-data directory (`RepVision/calibration.json` on
 Windows). A profile contains only the arm, aggregate endpoint angles, derived
 thresholds, sample count, and timestamp. It never contains frames, video,
 keypoints, or sample history. The guided camera workflow that creates and
-resets these profiles will be added to the command-line interface next.
+resets these profiles is entirely local.
 
 ## Pose detection
 
