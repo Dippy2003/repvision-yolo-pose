@@ -160,6 +160,52 @@ def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     assert "Aggregate session saved" in capsys.readouterr().out
 
 
+def test_main_supplies_saved_profiles_to_workout(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "calibration.json"
+    saved = CalibrationProfile(
+        Arm.RIGHT,
+        42.0,
+        164.0,
+        52.0,
+        154.0,
+        20,
+        datetime(2026, 8, 17, tzinfo=UTC),
+    )
+    CalibrationStore(path).save(saved)
+
+    with patch(
+        "repvision.app.run_workout", return_value="outputs/sessions.csv"
+    ) as run:
+        assert main(["--calibration-file", str(path)]) == 0
+
+    assert run.call_args.kwargs["calibration_profiles"] == {Arm.RIGHT: saved}
+
+
+def test_main_calibration_bypass_supplies_no_profiles(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    saved = CalibrationProfile(
+        Arm.RIGHT,
+        42.0,
+        164.0,
+        52.0,
+        154.0,
+        20,
+        datetime(2026, 8, 17, tzinfo=UTC),
+    )
+    CalibrationStore(path).save(saved)
+
+    with patch(
+        "repvision.app.run_workout", return_value="outputs/sessions.csv"
+    ) as run:
+        assert main(
+            ["--calibration-file", str(path), "--no-calibration"]
+        ) == 0
+
+    assert run.call_args.kwargs["calibration_profiles"] == {}
+
+
 def test_main_builds_local_video_source(capsys: pytest.CaptureFixture[str]) -> None:
     with patch(
         "repvision.app.run_workout", return_value="outputs/sessions.csv"
