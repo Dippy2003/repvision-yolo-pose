@@ -1,9 +1,11 @@
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from repvision.app import build_parser, config_from_args, main, source_factory_from_args
+from repvision.calibration import CalibrationProfile, CalibrationStore
 from repvision.camera import Camera
 from repvision.config import Arm
 from repvision.pose_detector import PoseObservation, PoseStatus
@@ -56,6 +58,38 @@ def test_calibration_status_reports_missing_selected_arm(
     output = capsys.readouterr().out
     assert "No calibration saved for right arm" in output
     assert str(path) in output
+
+
+def test_calibration_status_reports_saved_aggregate_profile(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "calibration.json"
+    CalibrationStore(path).save(
+        CalibrationProfile(
+            Arm.LEFT,
+            40.0,
+            165.0,
+            50.0,
+            155.0,
+            20,
+            datetime(2026, 8, 17, tzinfo=UTC),
+        )
+    )
+
+    assert main(
+        [
+            "--calibration-status",
+            "--arm",
+            "left",
+            "--calibration-file",
+            str(path),
+        ]
+    ) == 0
+
+    output = capsys.readouterr().out
+    assert "arm=left" in output
+    assert "curled=40.0" in output
+    assert "extended=165.0" in output
 
 
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
