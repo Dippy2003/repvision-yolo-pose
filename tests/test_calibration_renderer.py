@@ -1,7 +1,14 @@
+from unittest.mock import patch
+
+import numpy as np
 import pytest
 
 from repvision.calibration import CalibrationStage
-from repvision.calibration_renderer import CalibrationOverlay, calibration_lines
+from repvision.calibration_renderer import (
+    CalibrationOverlay,
+    CalibrationRenderer,
+    calibration_lines,
+)
 from repvision.config import Arm
 from repvision.pose_detector import PoseStatus
 
@@ -71,3 +78,40 @@ def test_calibration_overlay_rejects_invalid_angle(angle: float) -> None:
             20,
             PoseStatus.TRACKING,
         )
+
+
+def test_calibration_renderer_adds_guidance_without_mutating_frame() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    original = frame.copy()
+    data = CalibrationOverlay(
+        Arm.RIGHT,
+        CalibrationStage.READY_EXTENDED,
+        None,
+        0,
+        20,
+        PoseStatus.NO_PERSON,
+    )
+
+    rendered = CalibrationRenderer().render(frame, data)
+
+    np.testing.assert_array_equal(frame, original)
+    assert rendered.shape == frame.shape
+    assert np.any(rendered != original)
+
+
+def test_calibration_renderer_displays_controls() -> None:
+    frame = np.zeros((300, 500, 3), dtype=np.uint8)
+    data = CalibrationOverlay(
+        Arm.LEFT,
+        CalibrationStage.CAPTURING_EXTENDED,
+        160.0,
+        4,
+        20,
+        PoseStatus.TRACKING,
+    )
+
+    with patch("repvision.calibration_renderer.cv2.putText") as put_text:
+        CalibrationRenderer().render(frame, data)
+
+    rendered_text = [call.args[1] for call in put_text.call_args_list]
+    assert "SPACE Confirm | R Restart | Q Cancel" in rendered_text
