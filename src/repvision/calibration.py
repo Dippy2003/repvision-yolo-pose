@@ -235,6 +235,19 @@ class GuidedCalibration:
             )
         return count
 
+    def build_profile(
+        self, calibrated_at: datetime | None = None
+    ) -> CalibrationProfile:
+        """Return the completed personalized profile."""
+        if self.stage is not CalibrationStage.COMPLETE:
+            raise CalibrationError("Guided calibration is not complete.")
+        return self.collector.build_profile(calibrated_at)
+
+    def reset(self) -> None:
+        """Restart the entire guided workflow from extension."""
+        self.collector.reset()
+        self.stage = CalibrationStage.READY_EXTENDED
+
 
 def profile_to_dict(profile: CalibrationProfile) -> dict[str, object]:
     """Serialize one profile without any frame or raw keypoint data."""

@@ -150,6 +150,40 @@ def test_guided_calibration_advances_through_both_endpoints() -> None:
     assert workflow.sample_count == 0
 
 
+def test_guided_calibration_builds_completed_profile() -> None:
+    workflow = GuidedCalibration(AppConfig(calibration_sample_target=3), Arm.LEFT)
+    workflow.begin_capture()
+    for angle in (160.0, 165.0, 170.0):
+        workflow.record(angle)
+    workflow.begin_capture()
+    for angle in (30.0, 35.0, 40.0):
+        workflow.record(angle)
+
+    result = workflow.build_profile(datetime(2026, 8, 17, tzinfo=UTC))
+
+    assert result.arm is Arm.LEFT
+    assert result.extended_angle == 165.0
+    assert result.curled_angle == 35.0
+
+
+def test_guided_calibration_rejects_early_profile() -> None:
+    workflow = GuidedCalibration(AppConfig(), Arm.RIGHT)
+
+    with pytest.raises(CalibrationError, match="not complete"):
+        workflow.build_profile()
+
+
+def test_guided_calibration_reset_discards_both_endpoints() -> None:
+    workflow = GuidedCalibration(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    workflow.begin_capture()
+    workflow.record(165.0)
+
+    workflow.reset()
+
+    assert workflow.stage is CalibrationStage.READY_EXTENDED
+    assert workflow.sample_count == 0
+
+
 @pytest.mark.parametrize("angle", [None, float("nan"), float("inf")])
 def test_calibration_collector_ignores_missing_measurements(
     angle: float | None,
