@@ -342,6 +342,32 @@ def test_pose_check_reports_structured_result(
     assert "angle=unavailable" in output
     assert "stage=unknown" in output
     assert "reps=0" in output
+    assert "thresholds=default" in output
+
+
+def test_pose_check_reports_personalized_thresholds(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "calibration.json"
+    CalibrationStore(path).save(
+        CalibrationProfile(
+            Arm.RIGHT,
+            42.0,
+            164.0,
+            52.0,
+            154.0,
+            20,
+            datetime(2026, 8, 17, tzinfo=UTC),
+        )
+    )
+    observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
+
+    with patch("repvision.app.check_pose", return_value=observation):
+        assert main(
+            ["--check-pose", "--calibration-file", str(path)]
+        ) == 0
+
+    assert "thresholds=personalized" in capsys.readouterr().out
 
 
 def test_main_reports_invalid_configuration_as_cli_error(

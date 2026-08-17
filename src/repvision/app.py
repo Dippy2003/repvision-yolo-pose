@@ -277,11 +277,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             if curl_update.smoothed_angle is None
             else f"{curl_update.smoothed_angle:.1f}"
         )
+        threshold_source = (
+            "personalized"
+            if config.selected_arm in calibration_profiles
+            else "default"
+        )
         print(
             "Pose check passed "
             f"(people={len(observation.persons)}, status={observation.status.value}, "
             f"arm={calibrated_config.selected_arm.value}, angle={angle_text}, "
-            f"stage={curl_update.stage.value}, reps={curl_update.count})."
+            f"stage={curl_update.stage.value}, reps={curl_update.count}, "
+            f"thresholds={threshold_source})."
         )
         return 0
     if args.benchmark:
