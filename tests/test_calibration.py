@@ -11,6 +11,7 @@ from repvision.calibration import (
     CalibrationPosition,
     CalibrationProfile,
     CalibrationRangeError,
+    CalibrationStage,
     CalibrationStorageError,
     CalibrationStore,
     apply_calibration,
@@ -25,6 +26,14 @@ from repvision.config import AppConfig, Arm
 def test_calibration_positions_have_stable_values() -> None:
     assert CalibrationPosition.EXTENDED.value == "extended"
     assert CalibrationPosition.CURLED.value == "curled"
+
+
+def test_calibration_stages_have_stable_values() -> None:
+    assert CalibrationStage.READY_EXTENDED.value == "ready_extended"
+    assert CalibrationStage.CAPTURING_EXTENDED.value == "capturing_extended"
+    assert CalibrationStage.READY_CURLED.value == "ready_curled"
+    assert CalibrationStage.CAPTURING_CURLED.value == "capturing_curled"
+    assert CalibrationStage.COMPLETE.value == "complete"
 
 
 def test_calibration_failures_share_public_base() -> None:

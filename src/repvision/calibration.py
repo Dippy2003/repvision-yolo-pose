@@ -52,6 +52,16 @@ class CalibrationPosition(StrEnum):
     CURLED = "curled"
 
 
+class CalibrationStage(StrEnum):
+    """User-visible state of the guided calibration workflow."""
+
+    READY_EXTENDED = "ready_extended"
+    CAPTURING_EXTENDED = "capturing_extended"
+    READY_CURLED = "ready_curled"
+    CAPTURING_CURLED = "capturing_curled"
+    COMPLETE = "complete"
+
+
 @dataclass(frozen=True, slots=True)
 class CalibrationProfile:
     """Validated personalized movement endpoints for one arm."""
