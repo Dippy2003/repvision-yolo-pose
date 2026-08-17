@@ -157,8 +157,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run a diagnostic or start the continuous local workout."""
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.video is not None and (args.check_camera or args.check_pose):
-        parser.error("--video cannot be combined with camera diagnostics")
+    if args.video is not None and (
+        args.check_camera
+        or args.check_pose
+        or args.calibrate
+        or args.calibration_status
+        or args.reset_calibration
+    ):
+        parser.error("--video cannot be combined with the selected command")
     try:
         config = config_from_args(args)
     except ValueError as error:

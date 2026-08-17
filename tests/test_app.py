@@ -167,11 +167,22 @@ def test_main_builds_local_video_source(capsys: pytest.CaptureFixture[str]) -> N
     assert "Aggregate session saved" in capsys.readouterr().out
 
 
-def test_video_input_rejects_camera_diagnostic(
+@pytest.mark.parametrize(
+    "command",
+    [
+        "--check-camera",
+        "--check-pose",
+        "--calibrate",
+        "--calibration-status",
+        "--reset-calibration",
+    ],
+)
+def test_video_input_rejects_incompatible_command(
+    command: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with pytest.raises(SystemExit) as exit_info:
-        main(["--video", "curl.mp4", "--check-camera"])
+        main(["--video", "curl.mp4", command])
 
     assert exit_info.value.code == 2
     assert "cannot be combined" in capsys.readouterr().err
