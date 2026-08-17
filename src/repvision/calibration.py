@@ -196,6 +196,45 @@ class GuidedCalibration:
         if self.stage in transitions:
             self.stage = transitions[self.stage]
 
+    @property
+    def position(self) -> CalibrationPosition | None:
+        """Return the endpoint associated with the current stage."""
+        if self.stage in (
+            CalibrationStage.READY_EXTENDED,
+            CalibrationStage.CAPTURING_EXTENDED,
+        ):
+            return CalibrationPosition.EXTENDED
+        if self.stage in (
+            CalibrationStage.READY_CURLED,
+            CalibrationStage.CAPTURING_CURLED,
+        ):
+            return CalibrationPosition.CURLED
+        return None
+
+    @property
+    def sample_count(self) -> int:
+        """Return retained samples for the endpoint currently shown."""
+        position = self.position
+        return 0 if position is None else self.collector.sample_count(position)
+
+    def record(self, angle: float | None) -> int:
+        """Capture one angle only while an endpoint is actively sampling."""
+        positions = {
+            CalibrationStage.CAPTURING_EXTENDED: CalibrationPosition.EXTENDED,
+            CalibrationStage.CAPTURING_CURLED: CalibrationPosition.CURLED,
+        }
+        position = positions.get(self.stage)
+        if position is None:
+            return self.sample_count
+        count = self.collector.add(position, angle)
+        if self.collector.position_ready(position):
+            self.stage = (
+                CalibrationStage.READY_CURLED
+                if position is CalibrationPosition.EXTENDED
+                else CalibrationStage.COMPLETE
+            )
+        return count
+
 
 def profile_to_dict(profile: CalibrationProfile) -> dict[str, object]:
     """Serialize one profile without any frame or raw keypoint data."""

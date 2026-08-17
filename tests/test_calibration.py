@@ -124,6 +124,32 @@ def test_guided_calibration_waits_for_explicit_capture() -> None:
     assert workflow.stage is CalibrationStage.CAPTURING_EXTENDED
 
 
+def test_guided_calibration_ignores_angles_until_capture_begins() -> None:
+    workflow = GuidedCalibration(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+
+    assert workflow.record(165.0) == 0
+    assert workflow.sample_count == 0
+
+
+def test_guided_calibration_advances_through_both_endpoints() -> None:
+    workflow = GuidedCalibration(AppConfig(calibration_sample_target=3), Arm.RIGHT)
+    workflow.begin_capture()
+    for angle in (160.0, 165.0, 170.0):
+        workflow.record(angle)
+
+    assert workflow.stage is CalibrationStage.READY_CURLED
+    assert workflow.position is CalibrationPosition.CURLED
+    assert workflow.sample_count == 0
+
+    workflow.begin_capture()
+    for angle in (30.0, 35.0, 40.0):
+        workflow.record(angle)
+
+    assert workflow.stage is CalibrationStage.COMPLETE
+    assert workflow.position is None
+    assert workflow.sample_count == 0
+
+
 @pytest.mark.parametrize("angle", [None, float("nan"), float("inf")])
 def test_calibration_collector_ignores_missing_measurements(
     angle: float | None,
