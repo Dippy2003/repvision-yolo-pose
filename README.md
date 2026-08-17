@@ -84,9 +84,10 @@ For the most reliable side view, place the camera far enough away to keep your
 selected shoulder, elbow, wrist, and hip visible. Start with a fully extended
 arm, hold each endpoint briefly, and then complete the curl.
 
-The camera window shows the selected arm, repetition count, smoothed elbow
-angle, movement stage, feedback, curl progress, and frame rate. Its controls
-are:
+The camera window keeps the complete camera image visible and places the
+selected arm, repetition count, smoothed elbow angle, movement stage, feedback,
+curl progress, frame rate, and controls in a separate right-hand sidebar. Its
+controls are:
 
 - `Q`: finish the workout and close the window
 - `R`: reset the current counter and aggregate statistics
@@ -271,7 +272,8 @@ Create a personalized profile for the selected arm:
 repvision --calibrate --arm right --confidence 0.3
 ```
 
-The camera window guides the complete process:
+The camera window keeps the full image visible while its right-hand sidebar
+guides the complete process:
 
 1. Stand side-on with the selected shoulder, elbow, and wrist visible.
 2. Fully extend the arm and press `Space`.
