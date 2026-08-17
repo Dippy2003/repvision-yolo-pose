@@ -155,7 +155,7 @@ def test_main_runs_guided_calibration_and_reports_profile(
 
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     with patch("repvision.app.run_workout", return_value="outputs/sessions.csv"):
-        assert main([]) == 0
+        assert main(["--no-calibration"]) == 0
 
     assert "Aggregate session saved" in capsys.readouterr().out
 
@@ -164,7 +164,7 @@ def test_main_builds_local_video_source(capsys: pytest.CaptureFixture[str]) -> N
     with patch(
         "repvision.app.run_workout", return_value="outputs/sessions.csv"
     ) as run:
-        assert main(["--video", "curl.mp4"]) == 0
+        assert main(["--video", "curl.mp4", "--no-calibration"]) == 0
 
     source_factory = run.call_args.kwargs["source_factory"]
     source = source_factory()
@@ -219,6 +219,7 @@ def test_main_runs_headless_pipeline_benchmark(
                 "12",
                 "--warmup-frames",
                 "3",
+                "--no-calibration",
             ]
         ) == 0
 
@@ -251,7 +252,7 @@ def test_pose_check_reports_structured_result(
 ) -> None:
     observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
     with patch("repvision.app.check_pose", return_value=observation):
-        assert main(["--check-pose", "--arm", "left"]) == 0
+        assert main(["--check-pose", "--arm", "left", "--no-calibration"]) == 0
 
     output = capsys.readouterr().out
     assert "people=0" in output

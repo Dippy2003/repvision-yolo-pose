@@ -9,6 +9,7 @@ from repvision.calibration import (
     CalibrationError,
     CalibrationStorageError,
     CalibrationStore,
+    calibrated_config_for_arm,
     format_calibration_profile,
 )
 from repvision.calibration_workflow import run_guided_calibration
@@ -226,12 +227,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.error(str(error))
         print(f"Camera check passed (frame shape={frame_shape}).")
         return 0
+    try:
+        calibration_profiles = (
+            {} if args.no_calibration else calibration_store.load_all()
+        )
+    except CalibrationStorageError as error:
+        parser.error(str(error))
+    calibrated_config = calibrated_config_for_arm(
+        config,
+        config.selected_arm,
+        calibration_profiles,
+    )
     if args.check_pose:
         try:
-            observation = check_pose(config)
+            observation = check_pose(calibrated_config)
         except (CameraError, PoseDetectorError) as error:
             parser.error(str(error))
-        curl_update = CurlTracker(config).update(observation.selected_arm)
+        curl_update = CurlTracker(calibrated_config).update(observation.selected_arm)
         angle_text = (
             "unavailable"
             if curl_update.smoothed_angle is None
@@ -240,15 +252,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             "Pose check passed "
             f"(people={len(observation.persons)}, status={observation.status.value}, "
-            f"arm={config.selected_arm.value}, angle={angle_text}, "
+            f"arm={calibrated_config.selected_arm.value}, angle={angle_text}, "
             f"stage={curl_update.stage.value}, reps={curl_update.count})."
         )
         return 0
     if args.benchmark:
         try:
             result = run_benchmark(
-                config,
-                source_factory_from_args(args, config),
+                calibrated_config,
+                source_factory_from_args(args, calibrated_config),
                 measured_frames=args.benchmark_frames,
                 warmup_frames=args.warmup_frames,
             )
@@ -263,7 +275,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     try:
         source_factory = source_factory_from_args(args, config)
-        session_path = run_workout(config, source_factory=source_factory)
+        session_path = run_workout(
+            config,
+            source_factory=source_factory,
+            calibration_profiles=calibration_profiles,
+        )
     except (
         DisplayError,
         FrameSourceError,
