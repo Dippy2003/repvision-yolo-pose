@@ -23,6 +23,7 @@ class OverlayData:
     progress: float | None
     fps: float
     paused: bool = False
+    personalized: bool = False
 
 
 class Renderer:
@@ -38,7 +39,7 @@ class Renderer:
         canvas = frame.copy()
         draw_arm(canvas, landmarks)
         panel_width = min(390, canvas.shape[1])
-        cv2.rectangle(canvas, (0, 0), (panel_width, 245), (20, 20, 20), -1)
+        cv2.rectangle(canvas, (0, 0), (panel_width, 275), (20, 20, 20), -1)
         cv2.putText(
             canvas,
             "RepVision | Bicep Curl",
@@ -106,7 +107,7 @@ class Renderer:
     @staticmethod
     def _draw_progress(canvas: Frame, progress: float | None, width: int) -> None:
         """Draw a clamped curl progress bar when an angle is available."""
-        left, right, top, bottom = 16, max(17, width - 16), 225, 237
+        left, right, top, bottom = 16, max(17, width - 16), 252, 264
         cv2.rectangle(canvas, (left, top), (right, bottom), (90, 90, 90), 1)
         if progress is None:
             return
@@ -149,6 +150,7 @@ def overlay_lines(data: OverlayData) -> tuple[str, ...]:
         f"Angle: {angle}",
         f"Stage: {data.stage.value.upper()}",
         f"FPS: {data.fps:.1f}",
+        f"Thresholds: {'PERSONALIZED' if data.personalized else 'DEFAULT'}",
         f"Feedback: {data.feedback.message.value}",
     )
 

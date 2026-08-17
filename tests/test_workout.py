@@ -108,6 +108,7 @@ def test_workout_engine_applies_initial_arm_calibration() -> None:
 
     assert engine.config.up_angle_threshold == 52.0
     assert engine.config.down_angle_threshold == 154.0
+    assert engine.state.personalized
 
 
 def test_workout_engine_switches_to_other_arm_calibration() -> None:
@@ -122,6 +123,7 @@ def test_workout_engine_switches_to_other_arm_calibration() -> None:
     assert engine.config.selected_arm is Arm.LEFT
     assert engine.tracker.counter.up_threshold == 45.0
     assert engine.tracker.counter.down_threshold == 160.0
+    assert engine.state.personalized
 
 
 def test_workout_engine_switches_to_defaults_without_other_profile() -> None:
@@ -133,6 +135,7 @@ def test_workout_engine_switches_to_defaults_without_other_profile() -> None:
 
     assert engine.config.up_angle_threshold == 50.0
     assert engine.config.down_angle_threshold == 155.0
+    assert not engine.state.personalized
 
 
 def test_workout_engine_ignores_observation_for_wrong_arm() -> None:

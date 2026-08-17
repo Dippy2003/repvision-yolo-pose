@@ -77,6 +77,7 @@ def test_overlay_lines_format_all_workout_measurements() -> None:
         "Angle: 91.5 deg",
         "Stage: DOWN",
         "FPS: 24.5",
+        "Thresholds: DEFAULT",
         "Feedback: Good movement",
     )
 
@@ -115,8 +116,23 @@ def test_renderer_draws_progress_fill() -> None:
 
     rendered = Renderer().render(frame, overlay)
 
-    assert tuple(rendered[230, 100]) == (80, 210, 120)
-    assert tuple(rendered[230, 350]) != (80, 210, 120)
+    assert tuple(rendered[258, 100]) == (80, 210, 120)
+    assert tuple(rendered[258, 350]) != (80, 210, 120)
+
+
+def test_overlay_lines_mark_personalized_thresholds() -> None:
+    overlay = OverlayData(
+        Arm.RIGHT,
+        1,
+        90.0,
+        MovementStage.DOWN,
+        FormFeedback(FeedbackMessage.GOOD_MOVEMENT),
+        0.5,
+        20.0,
+        personalized=True,
+    )
+
+    assert "Thresholds: PERSONALIZED" in overlay_lines(overlay)
 
 
 def test_renderer_draws_selected_arm_landmarks() -> None:

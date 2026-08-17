@@ -29,6 +29,7 @@ class WorkoutState:
 
     arm: Arm
     paused: bool = False
+    personalized: bool = False
 
     def toggle_pause(self) -> None:
         """Pause or resume frame processing."""
@@ -59,6 +60,7 @@ class FrameAnalysis:
             self.progress,
             self.fps,
             state.paused,
+            state.personalized,
         )
 
 
@@ -75,7 +77,10 @@ class WorkoutEngine:
         self.config = calibrated_config_for_arm(
             config, config.selected_arm, self.calibration_profiles
         )
-        self.state = WorkoutState(self.config.selected_arm)
+        self.state = WorkoutState(
+            self.config.selected_arm,
+            personalized=self.config.selected_arm in self.calibration_profiles,
+        )
         self.tracker = CurlTracker(self.config)
         self.form_checker = FormChecker(self.config)
         self.fps_meter = FpsMeter()
@@ -118,6 +123,7 @@ class WorkoutEngine:
             self.state.arm,
             self.calibration_profiles,
         )
+        self.state.personalized = self.state.arm in self.calibration_profiles
         self.tracker = CurlTracker(self.config)
         self.form_checker = FormChecker(self.config)
         self.fps_meter.reset()
