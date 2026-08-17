@@ -124,6 +124,29 @@ def test_reset_calibration_reports_absent_profile(
     assert "Calibration not found for right arm" in capsys.readouterr().out
 
 
+def test_main_runs_guided_calibration_and_reports_profile(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "calibration.json"
+    saved = CalibrationProfile(
+        Arm.RIGHT,
+        40.0,
+        165.0,
+        50.0,
+        155.0,
+        20,
+        datetime(2026, 8, 17, tzinfo=UTC),
+    )
+
+    with patch(
+        "repvision.app.run_guided_calibration", return_value=saved
+    ) as run:
+        assert main(["--calibrate", "--calibration-file", str(path)]) == 0
+
+    assert run.call_args.kwargs["store"].path == path
+    assert "Calibration saved: arm=right" in capsys.readouterr().out
+
+
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     with patch("repvision.app.run_workout", return_value="outputs/sessions.csv"):
         assert main([]) == 0

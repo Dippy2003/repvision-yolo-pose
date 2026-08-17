@@ -6,10 +6,12 @@ from pathlib import Path
 
 from repvision.benchmark import BenchmarkError, format_benchmark, run_benchmark
 from repvision.calibration import (
+    CalibrationError,
     CalibrationStorageError,
     CalibrationStore,
     format_calibration_profile,
 )
+from repvision.calibration_workflow import run_guided_calibration
 from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
@@ -188,6 +190,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             f"Calibration {result} for {config.selected_arm.value} arm "
             f"({calibration_store.path})."
+        )
+        return 0
+    if args.calibrate:
+        try:
+            profile = run_guided_calibration(config, store=calibration_store)
+        except (
+            CalibrationError,
+            CameraError,
+            DisplayError,
+            PoseDetectorError,
+        ) as error:
+            parser.error(str(error))
+        print(
+            "Calibration saved: "
+            f"{format_calibration_profile(profile)} "
+            f"(file={calibration_store.path})."
         )
         return 0
     if args.check_camera:
