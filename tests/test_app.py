@@ -30,6 +30,7 @@ def test_cli_overrides_foundation_settings() -> None:
             "my-sessions",
             "--calibration-samples",
             "12",
+            "--audio-cues",
         ]
     )
 
@@ -42,6 +43,7 @@ def test_cli_overrides_foundation_settings() -> None:
     assert config.input_size == 480
     assert config.output_directory == Path("my-sessions")
     assert config.calibration_sample_target == 12
+    assert config.audio_cues
 
 
 def test_calibration_commands_are_mutually_exclusive() -> None:

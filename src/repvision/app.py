@@ -133,6 +133,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=5,
         help="number of recent workouts shown by --history",
     )
+    parser.add_argument(
+        "--audio-cues",
+        action="store_true",
+        help="emit a local terminal bell for reps and form warnings",
+    )
     return parser
 
 
@@ -146,6 +151,7 @@ def config_from_args(args: argparse.Namespace) -> AppConfig:
         input_size=args.input_size,
         output_directory=args.output_directory,
         calibration_sample_target=args.calibration_samples,
+        audio_cues=args.audio_cues,
     )
 
 
