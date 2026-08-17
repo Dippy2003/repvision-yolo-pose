@@ -17,9 +17,10 @@ from repvision.camera import Camera, CameraError
 from repvision.config import AppConfig, Arm
 from repvision.display import DisplayError
 from repvision.frame_source import FrameSource, FrameSourceError
+from repvision.history import format_session_history
 from repvision.pose_detector import PoseDetector, PoseDetectorError, PoseObservation
 from repvision.rep_counter import CurlTracker
-from repvision.session import SessionLogError
+from repvision.session import SessionLogError, SessionLogger
 from repvision.video_source import VideoFileSource
 from repvision.workout import run_workout
 
@@ -93,6 +94,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="remove the selected arm's saved calibration and exit",
     )
+    diagnostics.add_argument(
+        "--history",
+        action="store_true",
+        help="show aggregate workout history and exit",
+    )
     parser.add_argument(
         "--benchmark-frames",
         type=int,
@@ -120,6 +126,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-calibration",
         action="store_true",
         help="ignore saved calibration profiles for this run",
+    )
+    parser.add_argument(
+        "--history-limit",
+        type=int,
+        default=5,
+        help="number of recent workouts shown by --history",
     )
     return parser
 
@@ -169,6 +181,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         or args.calibrate
         or args.calibration_status
         or args.reset_calibration
+        or args.history
     ):
         parser.error("--video cannot be combined with the selected command")
     try:
@@ -176,6 +189,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ValueError as error:
         parser.error(str(error))
     calibration_store = CalibrationStore(args.calibration_file)
+    if args.history:
+        if args.history_limit < 1:
+            parser.error("history_limit must be positive")
+        try:
+            summaries = SessionLogger(config.output_directory).load()
+        except SessionLogError as error:
+            parser.error(str(error))
+        print(format_session_history(summaries, recent_limit=args.history_limit))
+        return 0
     if args.calibration_status:
         try:
             profile = calibration_store.load(config.selected_arm)

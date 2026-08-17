@@ -9,6 +9,7 @@ from repvision.calibration import CalibrationProfile, CalibrationStore
 from repvision.camera import Camera
 from repvision.config import Arm
 from repvision.pose_detector import PoseObservation, PoseStatus
+from repvision.session import SessionLogger, SessionSummary
 from repvision.video_source import VideoFileSource
 
 
@@ -52,6 +53,38 @@ def test_cli_can_disable_saved_calibration_for_one_run() -> None:
     args = build_parser().parse_args(["--no-calibration"])
 
     assert args.no_calibration
+
+
+def test_history_command_reports_saved_aggregate_sessions(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    SessionLogger(tmp_path).save(
+        SessionSummary(
+            datetime(2026, 8, 17),
+            "bicep_curl",
+            Arm.RIGHT,
+            60.0,
+            10,
+            1,
+            2.0,
+        )
+    )
+
+    assert main(["--history", "--output-directory", str(tmp_path)]) == 0
+
+    output = capsys.readouterr().out
+    assert "Sessions: 1" in output
+    assert "Total reps: 10" in output
+
+
+def test_history_command_rejects_invalid_recent_limit(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        main(["--history", "--history-limit", "0"])
+
+    assert exit_info.value.code == 2
+    assert "history_limit must be positive" in capsys.readouterr().err
 
 
 def test_calibration_status_reports_missing_selected_arm(
