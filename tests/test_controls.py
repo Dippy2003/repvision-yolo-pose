@@ -26,3 +26,8 @@ def test_decode_key_recognizes_pause_toggle(key_code: int) -> None:
 @pytest.mark.parametrize("key_code", [ord("l"), ord("L")])
 def test_decode_key_recognizes_arm_switch(key_code: int) -> None:
     assert decode_key(key_code) is KeyAction.SWITCH_ARM
+
+
+@pytest.mark.parametrize("key_code", [ord(" "), 13])
+def test_decode_key_accepts_calibration_confirmation(key_code: int) -> None:
+    assert decode_key(key_code) is KeyAction.CONFIRM

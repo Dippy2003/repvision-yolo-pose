@@ -11,6 +11,7 @@ class KeyAction(StrEnum):
     RESET = "reset"
     TOGGLE_PAUSE = "toggle_pause"
     SWITCH_ARM = "switch_arm"
+    CONFIRM = "confirm"
 
 
 def decode_key(key_code: int) -> KeyAction:
@@ -26,4 +27,6 @@ def decode_key(key_code: int) -> KeyAction:
         return KeyAction.TOGGLE_PAUSE
     if key in (ord("l"), ord("L")):
         return KeyAction.SWITCH_ARM
+    if key in (ord(" "), 13):
+        return KeyAction.CONFIRM
     return KeyAction.NONE
