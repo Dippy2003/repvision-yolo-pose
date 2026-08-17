@@ -70,6 +70,21 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="measure the local pipeline without opening a display",
     )
+    diagnostics.add_argument(
+        "--calibrate",
+        action="store_true",
+        help="open the camera and create a selected-arm calibration",
+    )
+    diagnostics.add_argument(
+        "--calibration-status",
+        action="store_true",
+        help="show the selected arm's saved calibration and exit",
+    )
+    diagnostics.add_argument(
+        "--reset-calibration",
+        action="store_true",
+        help="remove the selected arm's saved calibration and exit",
+    )
     parser.add_argument(
         "--benchmark-frames",
         type=int,
@@ -81,6 +96,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=2,
         help="unmeasured warm-up frames for --benchmark",
+    )
+    parser.add_argument(
+        "--calibration-file",
+        type=Path,
+        help="override the user-local calibration profile path",
+    )
+    parser.add_argument(
+        "--calibration-samples",
+        type=int,
+        default=defaults.calibration_sample_target,
+        help="reliable frames captured at each calibration endpoint",
     )
     return parser
 
@@ -94,6 +120,7 @@ def config_from_args(args: argparse.Namespace) -> AppConfig:
         confidence_threshold=args.confidence,
         input_size=args.input_size,
         output_directory=args.output_directory,
+        calibration_sample_target=args.calibration_samples,
     )
 
 

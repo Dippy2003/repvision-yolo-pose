@@ -25,6 +25,8 @@ def test_cli_overrides_foundation_settings() -> None:
             "480",
             "--output-directory",
             "my-sessions",
+            "--calibration-samples",
+            "12",
         ]
     )
 
@@ -36,6 +38,12 @@ def test_cli_overrides_foundation_settings() -> None:
     assert config.confidence_threshold == 0.65
     assert config.input_size == 480
     assert config.output_directory == Path("my-sessions")
+    assert config.calibration_sample_target == 12
+
+
+def test_calibration_commands_are_mutually_exclusive() -> None:
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["--calibrate", "--calibration-status"])
 
 
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
