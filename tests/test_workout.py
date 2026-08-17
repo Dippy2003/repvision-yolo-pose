@@ -95,6 +95,31 @@ def test_workout_engine_applies_initial_arm_calibration() -> None:
     assert engine.config.down_angle_threshold == 154.0
 
 
+def test_workout_engine_switches_to_other_arm_calibration() -> None:
+    timestamp = datetime.now().astimezone()
+    right = CalibrationProfile(Arm.RIGHT, 42, 164, 52, 154, 20, timestamp)
+    left = CalibrationProfile(Arm.LEFT, 35, 170, 45, 160, 20, timestamp)
+    engine = WorkoutEngine(AppConfig(), {Arm.RIGHT: right, Arm.LEFT: left})
+
+    engine.switch_arm()
+
+    assert engine.state.arm is Arm.LEFT
+    assert engine.config.selected_arm is Arm.LEFT
+    assert engine.tracker.counter.up_threshold == 45.0
+    assert engine.tracker.counter.down_threshold == 160.0
+
+
+def test_workout_engine_switches_to_defaults_without_other_profile() -> None:
+    timestamp = datetime.now().astimezone()
+    right = CalibrationProfile(Arm.RIGHT, 42, 164, 52, 154, 20, timestamp)
+    engine = WorkoutEngine(AppConfig(), {Arm.RIGHT: right})
+
+    engine.switch_arm()
+
+    assert engine.config.up_angle_threshold == 50.0
+    assert engine.config.down_angle_threshold == 155.0
+
+
 def test_workout_engine_ignores_observation_for_wrong_arm() -> None:
     engine = WorkoutEngine(AppConfig(selected_arm=Arm.RIGHT))
     missing = Landmark(None, 0.0)
