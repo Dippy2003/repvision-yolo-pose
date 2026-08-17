@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import pytest
 
+from repvision.audio import AudioCue, AudioCueController
 from repvision.calibration import CalibrationProfile
 from repvision.camera import Frame
 from repvision.config import AppConfig, Arm
@@ -76,6 +77,20 @@ def test_workout_engine_pause_resets_fps_baseline() -> None:
 
     assert engine.state.paused
     assert engine.fps_meter.fps == 0.0
+
+
+def test_workout_engine_forwards_frame_events_to_audio_controller() -> None:
+    emitted: list[AudioCue] = []
+    engine = WorkoutEngine(AppConfig(audio_cues=True))
+    engine.audio = AudioCueController(True, emitted.append)
+    warning = FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True)
+    engine.form_checker.check = lambda *_args: warning  # type: ignore[method-assign]
+    observation = PoseObservation((), None, None, PoseStatus.NO_PERSON)
+
+    engine.process(observation, 1.0)
+    engine.process(observation, 2.0)
+
+    assert emitted == [AudioCue.FORM_WARNING]
 
 
 def test_workout_engine_applies_initial_arm_calibration() -> None:

@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from time import monotonic
 
+from repvision.audio import AudioCueController
 from repvision.calibration import CalibrationProfile, calibrated_config_for_arm
 from repvision.camera import Camera, Frame
 from repvision.config import AppConfig, Arm
@@ -78,6 +79,7 @@ class WorkoutEngine:
         self.tracker = CurlTracker(self.config)
         self.form_checker = FormChecker(self.config)
         self.fps_meter = FpsMeter()
+        self.audio = AudioCueController(self.config.audio_cues)
 
     def process(self, observation: PoseObservation, timestamp: float) -> FrameAnalysis:
         """Update movement, feedback, progress, and FPS for one frame."""
@@ -93,6 +95,7 @@ class WorkoutEngine:
             update.smoothed_angle,
             update.stage,
         )
+        self.audio.update(update, feedback)
         progress = curl_progress(
             update.smoothed_angle,
             self.config.up_angle_threshold,
@@ -105,6 +108,7 @@ class WorkoutEngine:
         """Clear tracking and timing measurements while preserving controls."""
         self.tracker.reset()
         self.fps_meter.reset()
+        self.audio.reset()
 
     def switch_arm(self) -> None:
         """Switch the arm and clear measurements that cannot span arms."""
@@ -117,6 +121,7 @@ class WorkoutEngine:
         self.tracker = CurlTracker(self.config)
         self.form_checker = FormChecker(self.config)
         self.fps_meter.reset()
+        self.audio.reset()
 
     def toggle_pause(self) -> None:
         """Pause or resume without including idle time in the FPS estimate."""
