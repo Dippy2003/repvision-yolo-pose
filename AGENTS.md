@@ -29,7 +29,8 @@ frames or video by default.
   internet access, or write generated artifacts into the repository.
 - Use focused exceptions for expected failures and always release camera
   resources safely.
-- Preserve unrelated user changes. Never rewrite Git history or push without
-  explicit authorization.
+- Preserve unrelated user changes and never rewrite Git history.
+- Do not push commits or tags to a remote. Keep all repository changes local
+  unless the user explicitly revokes this rule.
 - Before finishing, run Ruff, Pytest, and a non-interactive application smoke
   check; review the final diff, recent commits, and `git status --short`.
