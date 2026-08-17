@@ -92,6 +92,38 @@ def test_calibration_status_reports_saved_aggregate_profile(
     assert "extended=165.0" in output
 
 
+def test_reset_calibration_removes_only_selected_arm(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "calibration.json"
+    store = CalibrationStore(path)
+    timestamp = datetime(2026, 8, 17, tzinfo=UTC)
+    store.save(CalibrationProfile(Arm.RIGHT, 40, 165, 50, 155, 20, timestamp))
+    store.save(CalibrationProfile(Arm.LEFT, 42, 164, 52, 154, 20, timestamp))
+
+    assert main(
+        ["--reset-calibration", "--arm", "left", "--calibration-file", str(path)]
+    ) == 0
+
+    assert store.load(Arm.LEFT) is None
+    assert store.load(Arm.RIGHT) is not None
+    assert "Calibration removed for left arm" in capsys.readouterr().out
+
+
+def test_reset_calibration_reports_absent_profile(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(
+        [
+            "--reset-calibration",
+            "--calibration-file",
+            str(tmp_path / "missing.json"),
+        ]
+    ) == 0
+
+    assert "Calibration not found for right arm" in capsys.readouterr().out
+
+
 def test_main_starts_live_workout(capsys: pytest.CaptureFixture[str]) -> None:
     with patch("repvision.app.run_workout", return_value="outputs/sessions.csv"):
         assert main([]) == 0

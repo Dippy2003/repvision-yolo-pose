@@ -179,6 +179,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"(file={calibration_store.path})."
             )
         return 0
+    if args.reset_calibration:
+        try:
+            removed = calibration_store.reset(config.selected_arm)
+        except CalibrationStorageError as error:
+            parser.error(str(error))
+        result = "removed" if removed else "not found"
+        print(
+            f"Calibration {result} for {config.selected_arm.value} arm "
+            f"({calibration_store.path})."
+        )
+        return 0
     if args.check_camera:
         try:
             frame_shape = check_camera(config)
