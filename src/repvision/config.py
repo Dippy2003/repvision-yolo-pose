@@ -31,6 +31,7 @@ class AppConfig:
     calibration_sample_target: int = 20
     calibration_minimum_range: float = 60.0
     calibration_threshold_margin: float = 10.0
+    audio_cues: bool = False
 
     def __post_init__(self) -> None:
         if not self.model_name.strip():
@@ -64,3 +65,5 @@ class AppConfig:
                 "calibration_threshold_margin must be positive and less than "
                 "half the minimum range"
             )
+        if not isinstance(self.audio_cues, bool):
+            raise ValueError("audio_cues must be true or false")

@@ -28,6 +28,7 @@ def test_application_defaults_match_initial_tracking_setup() -> None:
     assert config.calibration_sample_target == 20
     assert config.calibration_minimum_range == 60.0
     assert config.calibration_threshold_margin == 10.0
+    assert not config.audio_cues
 
 
 @pytest.mark.parametrize(
@@ -113,3 +114,8 @@ def test_calibration_range_stays_physical(minimum_range: float) -> None:
 def test_calibration_margin_preserves_threshold_order(margin: float) -> None:
     with pytest.raises(ValueError, match="calibration_threshold_margin"):
         AppConfig(calibration_threshold_margin=margin)
+
+
+def test_audio_cues_require_boolean_setting() -> None:
+    with pytest.raises(ValueError, match="audio_cues"):
+        AppConfig(audio_cues=1)  # type: ignore[arg-type]
