@@ -56,14 +56,13 @@ class Renderer:
         landmarks: ArmLandmarks | None = None,
     ) -> Frame:
         """Return a frame with the current workout measurements."""
-        canvas = frame.copy()
+        canvas, panel_left = side_panel_canvas(frame)
         draw_arm(canvas, landmarks)
-        panel_width = min(390, canvas.shape[1])
-        cv2.rectangle(canvas, (0, 0), (panel_width, 275), (20, 20, 20), -1)
+        text_left = panel_left + 16
         cv2.putText(
             canvas,
             "RepVision | Bicep Curl",
-            (16, 30),
+            (text_left, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (255, 255, 255),
@@ -74,37 +73,38 @@ class Renderer:
             cv2.putText(
                 canvas,
                 line,
-                (16, 60 + index * 27),
+                (text_left, 60 + index * 27),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.55,
                 (235, 235, 235),
                 1,
                 cv2.LINE_AA,
             )
-        self._draw_progress(canvas, data.progress, panel_width)
+        self._draw_progress(canvas, data.progress, panel_left)
         if data.paused:
-            self._draw_paused_banner(canvas)
-        self._draw_controls(canvas)
+            self._draw_paused_banner(canvas, panel_left)
+        self._draw_controls(canvas, panel_left)
         return canvas
 
     @staticmethod
-    def _draw_controls(canvas: Frame) -> None:
+    def _draw_controls(canvas: Frame, panel_left: int) -> None:
         """Show the keyboard controls on every workout frame."""
-        cv2.putText(
-            canvas,
-            "Q Quit | R Reset | P Pause | L Switch arm",
-            (12, max(18, canvas.shape[0] - 12)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            1,
-            cv2.LINE_AA,
-        )
+        for index, text in enumerate(("Q Quit | R Reset", "P Pause | L Switch arm")):
+            cv2.putText(
+                canvas,
+                text,
+                (panel_left + 16, max(18, canvas.shape[0] - 38 + index * 24)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+                1,
+                cv2.LINE_AA,
+            )
 
     @staticmethod
-    def _draw_paused_banner(canvas: Frame) -> None:
+    def _draw_paused_banner(canvas: Frame, camera_width: int) -> None:
         """Make paused state unmistakable without obscuring the workout panel."""
-        center_x = canvas.shape[1] // 2
+        center_x = camera_width // 2
         center_y = canvas.shape[0] // 2
         cv2.rectangle(
             canvas,
@@ -125,9 +125,13 @@ class Renderer:
         )
 
     @staticmethod
-    def _draw_progress(canvas: Frame, progress: float | None, width: int) -> None:
+    def _draw_progress(
+        canvas: Frame, progress: float | None, panel_left: int
+    ) -> None:
         """Draw a clamped curl progress bar when an angle is available."""
-        left, right, top, bottom = 16, max(17, width - 16), 252, 264
+        left = panel_left + 16
+        right = canvas.shape[1] - 16
+        top, bottom = 252, 264
         cv2.rectangle(canvas, (left, top), (right, bottom), (90, 90, 90), 1)
         if progress is None:
             return

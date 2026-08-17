@@ -122,8 +122,9 @@ def test_renderer_adds_panel_without_mutating_source_frame() -> None:
     rendered = Renderer().render(frame, overlay)
 
     np.testing.assert_array_equal(frame, source)
-    assert rendered.shape == frame.shape
-    assert np.any(rendered != source)
+    assert rendered.shape == (300, 860, 3)
+    np.testing.assert_array_equal(rendered[:, :500], source)
+    assert np.any(rendered[:, 500:] != 20)
 
 
 def test_renderer_draws_progress_fill() -> None:
@@ -140,8 +141,8 @@ def test_renderer_draws_progress_fill() -> None:
 
     rendered = Renderer().render(frame, overlay)
 
-    assert tuple(rendered[258, 100]) == (80, 210, 120)
-    assert tuple(rendered[258, 350]) != (80, 210, 120)
+    assert tuple(rendered[258, 600]) == (80, 210, 120)
+    assert tuple(rendered[258, 825]) != (80, 210, 120)
 
 
 def test_overlay_lines_mark_personalized_thresholds() -> None:
@@ -218,4 +219,5 @@ def test_renderer_displays_keyboard_help() -> None:
         Renderer().render(frame, overlay)
 
     rendered_text = [call.args[1] for call in put_text.call_args_list]
-    assert "Q Quit | R Reset | P Pause | L Switch arm" in rendered_text
+    assert "Q Quit | R Reset" in rendered_text
+    assert "P Pause | L Switch arm" in rendered_text
