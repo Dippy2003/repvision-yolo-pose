@@ -162,6 +162,99 @@ pytest
 python -m repvision.app --help
 ```
 
+## Repeatable verification workflow
+
+Run these checks in order whenever you want to verify the complete system.
+The first phase is fully offline; later phases use your own camera or video.
+
+### Installation and offline quality
+
+```console
+python -m pip install -e ".[dev]"
+ruff check .
+pytest
+python -m repvision.app --help
+```
+
+This phase passes when Ruff reports no errors, every test passes, and the help
+screen lists the camera, pose, calibration, benchmark, history, and audio
+options. Tests never open a camera or download model weights.
+
+### Camera access
+
+```console
+repvision --check-camera
+```
+
+This phase passes when one frame shape is printed and the camera is released.
+If it fails, close applications using the camera or try `--camera-index 1`.
+
+### Pose visibility
+
+```console
+repvision --check-pose --confidence 0.3 --arm right
+```
+
+This phase passes when `status=tracking` and a numeric angle are printed. A
+single-frame check normally remains at `stage=unknown` and `reps=0`; continuous
+frames are required to confirm movement stages and repetitions.
+
+### Personalized calibration
+
+```console
+repvision --calibrate --arm right --confidence 0.3
+repvision --calibration-status --arm right
+repvision --check-pose --arm right --confidence 0.3
+```
+
+This phase passes when the guided capture completes, status prints numeric
+curled/extended/up/down values, and the pose check reports
+`thresholds=personalized`. Repeat with `--arm left` to create a separate left
+profile. To repeat from scratch, run `repvision --reset-calibration --arm right`.
+
+### Live counting and controls
+
+```console
+repvision --arm right --confidence 0.3
+```
+
+The window should say `Thresholds: PERSONALIZED` when that arm has a profile.
+Confirm that a complete extension followed by a complete curl counts once,
+partial motion does not count, and `P`, `R`, `L`, and `Q` work. Compare defaults
+with `repvision --no-calibration --arm right --confidence 0.3`.
+
+### Prerecorded video
+
+First confirm that the file really exists, then analyze it:
+
+```powershell
+Test-Path "C:\Users\DIPNA\Videos\curl-test.mp4"
+repvision --video "C:\Users\DIPNA\Videos\curl-test.mp4" --confidence 0.3 --input-size 480
+```
+
+`Test-Path` must print `True`. RepVision does not create or download this video;
+replace the example with the full path of a video already on your computer.
+
+### Performance benchmark
+
+```console
+repvision --benchmark --benchmark-frames 30 --warmup-frames 2 --confidence 0.3
+```
+
+This phase passes when capture, inference, analysis, rendering, total latency,
+and effective FPS are printed. Repeat with input sizes `320`, `480`, and `640`
+on the same camera setup or video for a fair comparison.
+
+### Saved aggregate history
+
+```console
+repvision --history
+repvision --history --history-limit 10
+```
+
+This phase passes when totals and recent workouts are printed, or an explicit
+message says that no aggregate workout sessions exist yet.
+
 ## Configuration
 
 Defaults live in the frozen `AppConfig` dataclass. They include camera and arm
@@ -256,6 +349,13 @@ When a workout ends, RepVision appends one row to `outputs/sessions.csv` by
 default. The row contains only the start datetime, exercise, selected arm,
 duration, repetitions, warning count, and average reliable repetition duration.
 
+Show totals and the five most recent aggregate sessions without opening the
+camera:
+
+```console
+repvision --history
+```
+
 ## Troubleshooting
 
 - If the camera cannot open, close other camera applications and try
@@ -273,6 +373,10 @@ duration, repetitions, warning count, and average reliable repetition duration.
 - Keyboard commands work while the OpenCV workout window has focus.
 - If a previous `sessions.csv` has different columns, move it outside the
   output directory so RepVision can create the current schema safely.
+- If a calibration file is damaged, use `--no-calibration` for an immediate
+  workout, then move the reported JSON file aside and calibrate again.
+- Audio cues use the local terminal bell and depend on terminal/operating-system
+  sound settings. They never send audio or workout data anywhere.
 
 ## Privacy
 
@@ -290,8 +394,6 @@ biomechanical assessment.
 
 ## Future improvements
 
-- Camera-guided controls for creating and resetting calibration profiles
 - Additional exercises built on separate, tested movement state machines
-- A session-history view using the existing aggregate CSV data
 - Measured CPU performance profiles across supported model and input sizes
-- Optional audio cues that preserve the local-only privacy model
+- An optional graphical history view built from aggregate-only session data
