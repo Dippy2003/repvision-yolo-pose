@@ -6,6 +6,7 @@ import pytest
 
 from repvision.calibration import CalibrationStore, GuidedCalibration
 from repvision.calibration_workflow import (
+    CalibrationCancelled,
     calibration_angle,
     calibration_overlay,
     run_guided_calibration,
@@ -141,3 +142,23 @@ def test_guided_camera_calibration_saves_completed_profile(tmp_path: Path) -> No
     assert profile.extended_angle == 165.0
     assert profile.curled_angle == 35.0
     assert store.load(Arm.RIGHT) == profile
+
+
+def test_guided_camera_calibration_cancels_without_profile(tmp_path: Path) -> None:
+    camera = FakeCamera(0)
+    display = FakeDisplay([KeyAction.QUIT])
+    store = CalibrationStore(tmp_path / "calibration.json")
+
+    with pytest.raises(CalibrationCancelled, match="no profile saved"):
+        run_guided_calibration(
+            AppConfig(calibration_sample_target=3),
+            store=store,
+            camera_factory=lambda _index: camera,
+            detector_factory=FakeDetector,
+            display_factory=lambda: display,
+            renderer_factory=FakeRenderer,
+        )
+
+    assert camera.released
+    assert display.closed
+    assert not store.path.exists()
