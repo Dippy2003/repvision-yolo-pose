@@ -66,6 +66,22 @@ class SessionSummary:
             "" if average is None else f"{average:.2f}",
         )
 
+    @classmethod
+    def from_csv_row(cls, row: dict[str, str]) -> "SessionSummary":
+        """Parse one aggregate CSV row through normal value validation."""
+        if set(row) != set(SESSION_HEADERS):
+            raise ValueError("session row fields do not match the expected schema")
+        average_text = row["average_rep_duration_seconds"]
+        return cls(
+            datetime.fromisoformat(row["datetime"]),
+            row["exercise"],
+            Arm(row["arm"]),
+            float(row["duration_seconds"]),
+            int(row["repetitions"]),
+            int(row["warning_count"]),
+            None if average_text == "" else float(average_text),
+        )
+
 
 class SessionAccumulator:
     """Collect aggregate-only statistics while frames remain in memory."""

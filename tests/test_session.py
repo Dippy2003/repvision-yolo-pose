@@ -45,6 +45,43 @@ def test_session_summary_leaves_unavailable_rep_average_empty() -> None:
     assert summary.as_csv_row()[-1] == ""
 
 
+def test_session_summary_parses_aggregate_csv_row() -> None:
+    row = dict(
+        zip(
+            SESSION_HEADERS,
+            (
+                "2026-08-17T10:30:00",
+                "bicep_curl",
+                "right",
+                "65.25",
+                "8",
+                "2",
+                "2.35",
+            ),
+            strict=True,
+        )
+    )
+
+    result = SessionSummary.from_csv_row(row)
+
+    assert result.started_at == datetime(2026, 8, 17, 10, 30)
+    assert result.arm is Arm.RIGHT
+    assert result.repetitions == 8
+    assert result.average_rep_duration_seconds == 2.35
+
+
+def test_session_summary_parses_unavailable_average() -> None:
+    row = dict(
+        zip(
+            SESSION_HEADERS,
+            ("2026-08-17", "bicep_curl", "left", "10", "0", "0", ""),
+            strict=True,
+        )
+    )
+
+    assert SessionSummary.from_csv_row(row).average_rep_duration_seconds is None
+
+
 def test_session_accumulator_tracks_reps_warnings_and_average_duration() -> None:
     accumulator = SessionAccumulator(datetime(2026, 8, 11, 10), 100.0)
     warning = FormFeedback(FeedbackMessage.ELBOW_DRIFT, is_form_warning=True)
